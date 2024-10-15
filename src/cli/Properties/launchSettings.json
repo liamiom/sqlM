@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "sqlM": {
+      "commandName": "Project",
+      "commandLineArgs": "Scaffold",
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>sqlM</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="SQL.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="OutputFiles\Function.sql" />
+    <None Remove="OutputFiles\Query.sql" />
+    <None Remove="OutputFiles\SqlFolderREADME.md" />
+    <None Remove="OutputFiles\StoredProcedure.sql" />
+    <None Remove="OutputFiles\Table.sql" />
+    <None Remove="OutputFiles\Table_AddColumn.sql" />
+    <None Remove="OutputFiles\View.sql" />
+    <None Remove="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="OutputFiles\Function.sql" />
+    <EmbeddedResource Include="OutputFiles\Query.sql" />
+    <EmbeddedResource Include="OutputFiles\Database.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OutputFiles\SqlFolderREADME.md" />
+    <EmbeddedResource Include="OutputFiles\StoredProcedure.sql" />
+    <EmbeddedResource Include="OutputFiles\Table.sql" />
+    <EmbeddedResource Include="OutputFiles\Table_AddColumn.sql" />
+    <EmbeddedResource Include="OutputFiles\View.sql" />
+    <EmbeddedResource Include="..\..\README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.35" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+  </ItemGroup>
+
+  <!-- Dotnet Tool Specific settings -->
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <PackageId>sqlM</PackageId>
+    <Version>0.1.0</Version>
+    <Title>sqlM</Title>
+    <ToolCommandName>sqlM</ToolCommandName>
+    <PackageOutputPath>bin/./nupkg</PackageOutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Declarative SQL boilerplate generation. sqlM simplifies interaction with a SQL database by automatically generating the boilerplate integration and mapping code.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+</Project>
