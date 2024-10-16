@@ -4,6 +4,11 @@
       "commandName": "Project",
       "commandLineArgs": "Scaffold",
       "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+    },
+    "Help": {
+      "commandName": "Project",
+      "commandLineArgs": "help",
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
     }
   }
 }
