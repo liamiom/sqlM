@@ -2,6 +2,8 @@
 using sqlM.Extensions;
 using sqlM.ResultClassTypes;
 using sqlM.State;
+using System.Data.SqlClient;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -168,7 +170,10 @@ internal class FileHandler
                 .Where(i => 
                     i.CleanFileName != sqlFile.CleanFileName &&
                     i.ScriptType != SqlFile.ObjectTypes.Query &&
-                    Regex.IsMatch(sqlFile.ContentNoComments, $@"[\[\s]{i.CleanFileName}[\]\s]", RegexOptions.Singleline | RegexOptions.IgnoreCase)
+                    Regex.IsMatch(
+                        sqlFile.ContentNoComments.RegexReplace(@"\[?\S+\]?\s\[?(int|datetime|date|time|decimal|bit|varchar|varbinary|float|text|nvarchar)+\]", ""), 
+                        $@"[\[\s]{i.CleanFileName}[\]\s]", 
+                        RegexOptions.Singleline | RegexOptions.IgnoreCase)
                     )
                 .ToList();
             taskProgress.Increment(1);
@@ -190,10 +195,23 @@ internal class FileHandler
 
             if (filesToSort.Any() && !batch.Any())
             {
-                string fileNames = filesToSort
-                    .Select(i => i.FileName)
-                    .Aggregate((x, y) => $"{x}\n{y}");
-                AnsiConsole.MarkupLine($"\n[red]It looks like there is a circular reference in the following files.[/]\n{fileNames}");
+                var cleanNames = filesToSort.Select(i => i.CleanFileName);
+                string links = filesToSort
+                    .Where(i => 
+                        i.Dependencies.Any(d => 
+                            d.Dependencies.Any(a => a.CleanFileName == i.CleanFileName)
+                            )
+                        )
+                    .Select(i => 
+                        i.CleanFileName + " -> \n\t" + 
+                        i.Dependencies
+                            .Where(f => cleanNames.Contains(f.CleanFileName))
+                            .Select(s => s.CleanFileName)
+                            .Join("\n\t")
+                    )
+                    .Join("\n");
+
+                AnsiConsole.MarkupLine($"\n[red]It looks like there is a circular reference in the following files.[/]\n{links}");
 
                 return Array.Empty<SqlFile>();
             }
@@ -208,6 +226,54 @@ internal class FileHandler
         }
 
         return sqlFiles;
+    }
+
+    public static (bool Result, string FileName, string Error) UpdateDatabase(Container state, ProgressTask taskProgress)
+    {
+        SqlConnection conn = new(state.ConnectionString);
+        conn.Open();
+        SqlTransaction transaction = conn.BeginTransaction();
+
+        foreach (var sqlFile in state.SqlFiles)
+        {
+            var (result, error) = RunUpdateScript(sqlFile, conn, transaction);
+            if (!result)
+            {
+                transaction.Rollback();
+                conn.Close();
+                return (false, sqlFile.CleanFileName, error);
+            }
+
+            taskProgress.Increment(1);
+        }
+
+        transaction.Commit();
+        conn.Close();
+
+        return (true, "", "");
+    }
+
+    private static (bool Result, string Error) RunUpdateScript(SqlFile script, SqlConnection conn, SqlTransaction transaction)
+    {
+        string errorMessage = "";
+        try
+        {
+            string[] sqlSections = script.ContentSplitOnGo();
+            foreach (string sql in sqlSections)
+            {
+                SqlCommand createCmd = new(sql, conn, transaction);
+                createCmd.ExecuteNonQuery();
+            }
+
+            return (true, errorMessage);
+        }
+        catch (Exception ex)
+        {
+            string splitterLine = "".PadRight(70, '*');
+            errorMessage = $"{splitterLine}\n{script.Content}\n{splitterLine}\n{ex.Message}\n".AnsiSafe();
+        }
+
+        return (false, errorMessage);
     }
 
     private static BaseClassFile GetSqlFolderREADMEFile() => 

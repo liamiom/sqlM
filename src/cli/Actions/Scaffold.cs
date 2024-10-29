@@ -23,6 +23,13 @@ public class Scaffold : IAction
                     Directory.CreateDirectory(state.OutputDirectory);
                     state.SqlFiles = FileHandler.FindDependencies(state.SqlFiles, findDependenciesTask);
 
+                    ProgressTask updateDBTask = ctx.AddTask("[green]Updating the database[/]", maxValue: state.SqlFiles.Length);
+                    var (updateResult, errorFileName, error) = FileHandler.UpdateDatabase(state, updateDBTask);
+                    if (!updateResult)
+                    {
+                        errorMessage = $"\n[red]Error running \"{errorFileName}\"[/]\n\n{error}\n";
+                        return;
+                    }
 
                     ProgressTask generateClassesTask = ctx.AddTask("[green]Generating class files[/]", maxValue: state.SqlFiles.Length);
                     BaseClassFile[] classFiles = FileHandler.GenerateClassFiles(state, generateClassesTask);

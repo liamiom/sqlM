@@ -103,7 +103,7 @@ internal class StoredProcedureFile
             SqlTransaction transaction = conn.BeginTransaction();
 
             // Add the stored procedure and its dependencies to the database
-            string[] sqlSections = SplitOnGo(script.ContentWithDependencies);
+            string[] sqlSections = SplitOnGo(script.Content);
             foreach (string sql in sqlSections)
             {
                 SqlCommand createCmd = new(sql, conn, transaction);
@@ -140,7 +140,7 @@ internal class StoredProcedureFile
         catch (Exception ex)
         {
             string splitterLine = "".PadRight(70, '*');
-            string errorMessage = $"{splitterLine}\n{script.ContentWithDependencies}\n{splitterLine}\n{ex.Message}\n".AnsiSafe();
+            string errorMessage = $"{splitterLine}\n{script.Content}\n{splitterLine}\n{ex.Message}\n".AnsiSafe();
             if (!string.IsNullOrWhiteSpace(testQuery))
             {
                 errorMessage += $"\nThe test query was \n{testQuery}";

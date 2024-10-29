@@ -1,4 +1,6 @@
-﻿namespace sqlM.State;
+﻿using System.Text.RegularExpressions;
+
+namespace sqlM.State;
 
 public class SqlFile : File
 {
@@ -7,9 +9,11 @@ public class SqlFile : File
     public Dictionary<string, string> Names { get; set; }
     public ObjectTypes ScriptType { get; set; }
     public List<SqlFile> Dependencies { get; set; } = new List<SqlFile>();
-    public string ContentWithDependencies =>
-        Dependencies.Any()
-            ? Dependencies.Select(i => i.ContentWithDependencies).Aggregate((x, y) => $"{x}\nGO\n\n\n{y}") + $"\nGO\n\n\n{Content}"
-            : Content;
     public int SortOrder { get; set; } = 0;
+
+    public string[] ContentSplitOnGo()
+    {
+        string tidyGoLines = Regex.Replace(Content, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        return tidyGoLines.Split("\nGO", StringSplitOptions.RemoveEmptyEntries);
+    }
 }

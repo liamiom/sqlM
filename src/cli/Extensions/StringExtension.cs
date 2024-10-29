@@ -42,4 +42,7 @@ internal static class StringExtension
 
     public static string AnsiSafe(this string input) =>
         input.Replace("[", "[[").Replace("]", "]]");
+
+    public static string ToSpectreSafe(this string input) => 
+        input.Replace("[", "[[").Replace("]", "]]");
 }
