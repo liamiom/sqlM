@@ -137,6 +137,7 @@ internal class QueryFile
                 NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
                 ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
                 DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
+                IsIdentity = false,
                 Index = index
             })
             .ToList();

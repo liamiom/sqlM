@@ -66,6 +66,7 @@ internal class TableFile
                 NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
                 ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
                 DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
+                IsIdentity = ((bool)row["IsIdentity"]) == true,
                 Index = index
             })
             .ToList();

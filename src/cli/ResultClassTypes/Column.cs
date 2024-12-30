@@ -7,5 +7,6 @@ internal struct Column
     public string ColumnName;
     public int Index;
     public string DefaultValue;
+    public bool IsIdentity;
     public string FullDataType => $"{DataType}{NullFlag}";
 }
