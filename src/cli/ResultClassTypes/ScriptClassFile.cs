@@ -72,7 +72,7 @@ internal class ScriptClassFile : BaseClassFile
             string insertScript = $"\nINSERT INTO {entityName} ({fieldList}\n) \nVALUES ({dataPropsList}\n)";
 
             string readWhere = idColumns
-                .Select(i => $"\n   {i.ColumnName} = ISNULLL(@{i.ColumnName}, {i.ColumnName})")
+                .Select(i => $"\n   {i.ColumnName} = ISNULL(@{i.ColumnName}, {i.ColumnName})")
                 .Join(" AND");
             string readScript = $"\nSELECT * FROM {entityName}\nWHERE{readWhere}";
             string readFields = columns
@@ -83,7 +83,7 @@ internal class ScriptClassFile : BaseClassFile
                 .Select(i => $"\n   {i.ColumnName} = @{i.ColumnName}")
                 .Join(",");
             string updateWhere = idColumns
-                .Select(i => $"\n   {i.ColumnName} = ISNULLL(@{i.ColumnName}, {i.ColumnName})")
+                .Select(i => $"\n   {i.ColumnName} = ISNULL(@{i.ColumnName}, {i.ColumnName})")
                 .Join(" AND");
             string updateScript = $"\nUPDATE {entityName}\nSET\n{updateList}\nWHERE{updateWhere}";
 

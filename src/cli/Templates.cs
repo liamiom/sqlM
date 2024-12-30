@@ -75,7 +75,7 @@ public partial class Database
         {sqlParams}
 
         string query = $@""{readScript}"";
-        SqlDataReader dr = Generic_StoredProcedureReader(parameters, query);
+        SqlDataReader dr = Generic_OpenReader(parameters, query);
         List<{entityName}> output = [];
         while (dr.Read())
         {{
