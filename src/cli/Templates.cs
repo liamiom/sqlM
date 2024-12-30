@@ -68,12 +68,23 @@ public partial class Database
     }}
 ";
 
-    public static string CrudReadMethod(string entityName, string methodParams, string sqlParams, string returnType, string queryAssignment) =>
+    public static string CrudReadMethod(string entityName, string methodParams, string readFields, string readScript, string sqlParams, string returnType, string queryAssignment) =>
         $@"
-    public {entityName} {entityName}_Read({methodParams})
+    public List<{entityName}> {entityName}_Read({methodParams})
     {{
         {sqlParams}
-        {queryAssignment};
+
+        string query = $@""{readScript}"";
+        SqlDataReader dr = Generic_StoredProcedureReader(parameters, query);
+        List<{entityName}> output = [];
+        while (dr.Read())
+        {{
+          output.Add(new {entityName}
+          {{{readFields}
+          }});
+        }}
+
+        return output;
     }}
 ";
 

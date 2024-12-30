@@ -71,6 +71,14 @@ internal class ScriptClassFile : BaseClassFile
                 .Join(",");
             string insertScript = $"\nINSERT INTO {entityName} ({fieldList}\n) \nVALUES ({dataPropsList}\n)";
 
+            string readWhere = idColumns
+                .Select(i => $"\n   {i.ColumnName} = ISNULLL(@{i.ColumnName}, {i.ColumnName})")
+                .Join(" AND");
+            string readScript = $"\nSELECT * FROM {entityName}\nWHERE{readWhere}";
+            string readFields = columns
+                .Select(i => $"\n            {i.ColumnName} = dr.{GetTypeRequest(i.DataType)}({i.Index})")
+                .Join(",");
+
             string updateList = dataColumns
                 .Select(i => $"\n   {i.ColumnName} = @{i.ColumnName}")
                 .Join(",");
@@ -85,7 +93,7 @@ internal class ScriptClassFile : BaseClassFile
             string deleteScript = $"\nDELETE {entityName}\nWHERE {deleteWhere}";
 
             string add = Templates.CrudAddMethod(entityName, insertScript, SqlParams, returnType, queryAssignment);
-            string read = Templates.CrudReadMethod(entityName, methodParams, readDeleteSqlParams, returnType, queryAssignment);
+            string read = Templates.CrudReadMethod(entityName, methodParams, readFields, readScript, readDeleteSqlParams, returnType, queryAssignment);
             string update = Templates.CrudUpdateMethod(entityName, updateScript, SqlParams, returnType, queryAssignment);
             string delete = Templates.CrudDeleteMethod(entityName, methodParams, deleteScript, readDeleteSqlParams, returnType, queryAssignment);
             crudClass += Templates.CrudClass(add, read, update, delete);
