@@ -42,14 +42,24 @@ internal class TableFile
         IEnumerable<DataRow> rows = GetRows(sqlFile, state.ConnectionString);
         List<Column> columns = GetProperties(rows);
 
+        string methodParams = columns
+                .Where(i => i.IsIdentity)
+                .Select(i => $"\n        {SqlFile.CleanTypeName(i.DataType) ?? ""} {i.ColumnName}")
+                .Join(",");
+
+        string sqlParams = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => $"\n            new SqlParameter(\"{i.ColumnName}\", data.{i.ColumnName}),")
+                .Join();
+
         return new ScriptClassFile(
             fileName: $"{sqlFile.CleanFileName}.cs",
             entityName: sqlFile.EntityName,
             methodName: sqlFile.CleanFileName,
             columns: columns,
             sqlContent: sqlFile.Content,
-            methodParams: "",
-            sqlParams: "",
+            methodParams: methodParams,
+            sqlParams: sqlParams,
             objectType: ScriptClassFile.ObjectReturnTypes.Table,
             ScriptType: sqlFile.ScriptType
         );

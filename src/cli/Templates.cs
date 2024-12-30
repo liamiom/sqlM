@@ -2,7 +2,7 @@
 
 internal static class Templates
 {
-    public static string JoinClasses(string staticClass, string methodClass, string entityClass) =>
+    public static string JoinClasses(string staticClass, string methodClass, string entityClass, string crudClass) =>
         $@"
 // ##########################################################################################
 // #                                                                                        #
@@ -18,7 +18,7 @@ internal static class Templates
 using System.Data.SqlClient;
 
 namespace sqlM;
-{staticClass}{methodClass}{entityClass}"
+{staticClass}{methodClass}{entityClass}{crudClass}"
         .Replace("\r\n", "\n");
 
     public static string StaticClass(string methodName, string content, string scriptTypeClassName) =>
@@ -41,6 +41,61 @@ public partial class Database
         {queryAssignment};
     }}
 }}
+";
+
+    public static string CrudClass(string add, string read, string update, string delete) =>
+        $@"
+public partial class Database
+{{
+    {add}
+
+    {read}
+
+    {update}
+
+    {delete}
+}}
+";
+
+    public static string CrudAddMethod(string entityName, string insertScript, string sqlParams, string returnType, string queryAssignment) =>
+        $@"
+    public void {entityName}_Add(
+        {entityName} data)
+    {{
+        {sqlParams}
+        string script = $@""{insertScript}"";
+        Generic_ExecuteNonQuery(parameters, script);
+    }}
+";
+
+    public static string CrudReadMethod(string entityName, string methodParams, string sqlParams, string returnType, string queryAssignment) =>
+        $@"
+    public {entityName} {entityName}_Read({methodParams})
+    {{
+        {sqlParams}
+        {queryAssignment};
+    }}
+";
+
+    public static string CrudUpdateMethod(string entityName, string updateScript, string sqlParams, string returnType, string queryAssignment) =>
+        $@"
+    public void {entityName}_Update(
+        {entityName} data)
+    {{
+        {sqlParams}
+        string script = $@""{updateScript}"";
+        Generic_ExecuteNonQuery(parameters, script);
+    }}
+";
+
+    public static string CrudDeleteMethod(string entityName, string methodParams, string deleteScript, string sqlParams, string returnType, string queryAssignment) =>
+        $@"
+    public void {entityName}_Delete({methodParams})
+    {{
+        {sqlParams}
+        string script = $@""{deleteScript}"";
+        Generic_ExecuteNonQuery(parameters, script);
+    }}
 ";
 
     public static string ReturnType(bool isQuery, bool isScalar, string entityName, string scalarTypeName)

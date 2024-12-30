@@ -1,4 +1,6 @@
-﻿namespace sqlM.ResultClassTypes;
+﻿using sqlM.Converters;
+
+namespace sqlM.ResultClassTypes;
 
 internal class ScriptClassFile : BaseClassFile
 {
@@ -50,7 +52,46 @@ internal class ScriptClassFile : BaseClassFile
             ? ""
             : Templates.EntityTypeClass(EntityName, GetPropertyClassLines(Columns));
 
-        Content = Templates.JoinClasses(staticClass, methodClass, entityTypeClass);
+        string crudClass = "";
+        if (ScriptType == State.SqlFile.ObjectTypes.Table)
+        {
+            IEnumerable<Column> idColumns = columns.Where(i => i.IsIdentity);
+            IEnumerable<Column> dataColumns = columns.Where(i => !i.IsIdentity);
+
+            string readDeleteSqlParams = idColumns
+                .Select(i => $"\n            new SqlParameter(\"{i.ColumnName}\", {i.ColumnName}),")
+                .Join();
+            readDeleteSqlParams = Templates.Parameters(readDeleteSqlParams);
+
+            string fieldList = dataColumns
+                .Select(i => $"\n   {i.ColumnName}")
+                .Join(",");
+            string dataPropsList = dataColumns
+                .Select(i => $"\n   @{i.ColumnName}")
+                .Join(",");
+            string insertScript = $"\nINSERT INTO {entityName} ({fieldList}\n) \nVALUES ({dataPropsList}\n)";
+
+            string updateList = dataColumns
+                .Select(i => $"\n   {i.ColumnName} = @{i.ColumnName}")
+                .Join(",");
+            string updateWhere = idColumns
+                .Select(i => $"\n   {i.ColumnName} = ISNULLL(@{i.ColumnName}, {i.ColumnName})")
+                .Join(" AND");
+            string updateScript = $"\nUPDATE {entityName}\nSET\n{updateList}\nWHERE{updateWhere}";
+
+            string deleteWhere = idColumns
+                .Select(i => $"\n   {i.ColumnName} = @{i.ColumnName}")
+                .Join(" AND");
+            string deleteScript = $"\nDELETE {entityName}\nWHERE {deleteWhere}";
+
+            string add = Templates.CrudAddMethod(entityName, insertScript, SqlParams, returnType, queryAssignment);
+            string read = Templates.CrudReadMethod(entityName, methodParams, readDeleteSqlParams, returnType, queryAssignment);
+            string update = Templates.CrudUpdateMethod(entityName, updateScript, SqlParams, returnType, queryAssignment);
+            string delete = Templates.CrudDeleteMethod(entityName, methodParams, deleteScript, readDeleteSqlParams, returnType, queryAssignment);
+            crudClass += Templates.CrudClass(add, read, update, delete);
+        }
+
+        Content = Templates.JoinClasses(staticClass, methodClass, entityTypeClass, crudClass);
     }
 
     private static string GetAssignment(ObjectReturnTypes objectType, string entityName, string methodName, List<Column> columns, string typeStaticClassName) => 
