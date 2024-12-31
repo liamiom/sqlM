@@ -49,7 +49,7 @@ internal class TableFile
 
         string sqlParams = columns
                 .Where(i => !i.IsIdentity)
-                .Select(i => $"\n            new SqlParameter(\"{i.ColumnName}\", data.{i.ColumnName}),")
+                .Select(i => $"\n            NewParameter(\"{i.ColumnName}\", data.{i.ColumnName}),")
                 .Join();
 
         return new ScriptClassFile(

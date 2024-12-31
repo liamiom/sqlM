@@ -156,6 +156,16 @@ public partial class Database
     private static string[] SplitOnGo(string sql) => 
         Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
             .Split("GO", StringSplitOptions.RemoveEmptyEntries);
+
+    private static SqlParameter NewParameter(string name, object value)
+    {
+        if (value == null)
+        {
+            return new SqlParameter(name, DBNull.Value);
+        }
+
+        return new SqlParameter(name, value);
+    }
 }
 
 public static class TypeExtensions
