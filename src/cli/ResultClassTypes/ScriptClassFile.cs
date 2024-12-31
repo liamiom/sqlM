@@ -117,12 +117,7 @@ internal class ScriptClassFile : BaseClassFile
     private static string GetPropertyClassLines(List<Column> properties) =>
         properties
             .Select(i =>
-                Templates.PropertyString(
-                    i.DataType,
-                    i.NullFlag,
-                    i.ColumnName,
-                    i.DefaultValue
-                )
+                Templates.PropertyString(i)
             )
             .ToMultiLineString();
 

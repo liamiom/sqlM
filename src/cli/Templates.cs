@@ -1,4 +1,6 @@
-﻿namespace sqlM;
+﻿using sqlM.ResultClassTypes;
+
+namespace sqlM;
 
 internal static class Templates
 {
@@ -142,9 +144,8 @@ public class {entityName}
         ];
 ";
 
-    public static string PropertyString(string dataType, string nullFlag, string columnName, string defaultValue) =>
-        $"\tpublic {dataType}{nullFlag} {columnName} {{ get; set; }}{defaultValue}";
-
+    public static string PropertyString(Column i) =>
+        $"\tpublic {i.Required}{i.DataType}{i.NullFlag} {i.ColumnName} {{ get; set; }}{i.DefaultValue}";
 
     public static string PropertySet(string dataType, string nullFlag, string columnName) =>
         $"{columnName} = ";
