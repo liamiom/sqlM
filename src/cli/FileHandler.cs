@@ -164,17 +164,23 @@ internal class FileHandler
 
     public static SqlFile[] FindDependencies(SqlFile[] sqlFiles, ProgressTask taskProgress)
     {
-        foreach (SqlFile sqlFile in sqlFiles.Where(i => i.ScriptType != SqlFile.ObjectTypes.Query))
+        var dbObjects = sqlFiles
+            .Where(i => i.ScriptType != SqlFile.ObjectTypes.Query)
+            .Select(i => (
+                sqlFile: i,
+                cleanFileName: i.CleanFileName,
+                content: i.ContentNoComments.RegexReplace(@"\[?\S+\]?\s\[?(int|datetime|date|time|decimal|bit|varchar|char|varbinary|float|text|nvarchar)+\]", "")
+            ))
+            .ToList();
+
+        foreach (var dbObject in dbObjects)
         {
-            sqlFile.Dependencies = sqlFiles
+            dbObject.sqlFile.Dependencies = dbObjects
                 .Where(i => 
-                    i.CleanFileName != sqlFile.CleanFileName &&
-                    i.ScriptType != SqlFile.ObjectTypes.Query &&
-                    Regex.IsMatch(
-                        sqlFile.ContentNoComments.RegexReplace(@"\[?\S+\]?\s\[?(int|datetime|date|time|decimal|bit|varchar|varbinary|float|text|nvarchar)+\]", ""), 
-                        $@"[\[\s]{i.CleanFileName}[\]\s]", 
-                        RegexOptions.Singleline | RegexOptions.IgnoreCase)
+                    i.cleanFileName != dbObject.cleanFileName &&
+                    Regex.IsMatch(dbObject.content, $@"[\[\s]{i.cleanFileName}[\]\s]", RegexOptions.Singleline | RegexOptions.IgnoreCase)
                     )
+                .Select(i => i.sqlFile)
                 .ToList();
             taskProgress.Increment(1);
         }

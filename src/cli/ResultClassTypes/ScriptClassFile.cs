@@ -32,6 +32,7 @@ internal class ScriptClassFile : BaseClassFile
 
         bool isQuery = Columns?.Count > 0;
         bool isScalar = columns.Count() == 1;
+        columns = DeduplicateColumnNames(columns);
         string scalarTypeName = isScalar 
             ? columns.First().FullDataType 
             : "";
@@ -64,6 +65,22 @@ internal class ScriptClassFile : BaseClassFile
             ObjectReturnTypes.StoredProcedureResult => Templates.StoredProcedureAssignment(entityName, methodName, propertySet: GetNewObject(columns)),
             _ => ""
         };
+
+    private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
+        columns
+            .Select(i => CheckColumnNameForduplicates(i, columns))
+            .ToList();
+
+    private static Column CheckColumnNameForduplicates(Column column, List<Column> columns)
+    {
+        int matchedNameCount = columns.Count(i => i.ColumnName == column.ColumnName && i.Index < column.Index);
+        if (matchedNameCount > 0)
+        {
+            column.ColumnName = $"{column.ColumnName}_{matchedNameCount}";
+        }
+
+        return column;
+    }
 
     private static string GetPropertyClassLines(List<Column> properties) =>
         properties

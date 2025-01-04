@@ -24,7 +24,7 @@ internal class SqlFile
             .RegexReplace(@"\n\s*AS\s.*", "", RegexOptions.Singleline | RegexOptions.IgnoreCase) // Trim out the script body
             .RegexReplace(@"--.*$", "", RegexOptions.Multiline) // Trim out single line comments
             .RegexReplace(@"/\*.+\*/", "", RegexOptions.Multiline) // Trim out multi line comments
-            .RegexMatchAll(@"@[\w\d]+\s+\[?(int|datetime|date|time|decimal|bit|varchar|varbinary|float|text|nvarchar)+\]?")
+            .RegexMatchAll(@"@[\w\d]+\s+\[?(int|datetime|date|time|decimal|bit|varchar|char|varbinary|float|text|nvarchar)+\]?")
             .Select(i => i.Trim().Split(' '))
             .Where(i => i.Length == 2)
             .Select(i => new KeyValuePair<string, Type>(i[0], GetTypeFromTidySqlName(i[1])))
