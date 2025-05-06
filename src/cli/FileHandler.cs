@@ -151,7 +151,7 @@ internal class FileHandler
         string updateScripts = sqlFiles
             .Where(i => i.ScriptType != SqlFile.ObjectTypes.Query &&  i.ScriptType != SqlFile.ObjectTypes.None)
             .OrderBy(i => i.SortOrder)
-            .Select(i => $"\t\t\tnew(\"{i.CleanFileName}\", DatabaseUpdateStrings.{i.CleanFileName}),\n")
+            .Select(i => $"\t\t\tnew UpdateScript(\"{i.CleanFileName}\", DatabaseUpdateStrings.{i.CleanFileName}),\n")
             .Join();
 
         dbFile.Content = dbFile.Content.Replace(

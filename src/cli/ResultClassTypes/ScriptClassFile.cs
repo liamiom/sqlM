@@ -87,12 +87,16 @@ internal class ScriptClassFile : BaseClassFile
             .Select(i =>
                 Templates.PropertyString(
                     i.DataType,
-                    i.NullFlag,
+                    FilterOutUnstupportedNullableTypes(i.DataType, i.NullFlag),
                     i.ColumnName,
                     i.DefaultValue
                 )
             )
             .ToMultiLineString();
+
+    private static string FilterOutUnstupportedNullableTypes(string dataType, string nullFlag) =>
+         dataType == "string" || dataType == "byte[]" ? "" : nullFlag;
+
 
     private static string GetNewObject(List<Column> properties) =>
         properties

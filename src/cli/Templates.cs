@@ -15,30 +15,34 @@ internal static class Templates
 // #                                                                                        #
 // ##########################################################################################
 
+using System;
 using System.Data.SqlClient;
+using System.Collections.Generic;
 
-namespace sqlM;
-{staticClass}{methodClass}{entityClass}"
-        .Replace("\r\n", "\n");
-
-    public static string StaticClass(string methodName, string content, string scriptTypeClassName) =>
-        $@"
-public static partial class {scriptTypeClassName}
+namespace sqlM
 {{
-    public const string {methodName} = @""
-{content.Replace("\"", "\"\"")}"";
-}}
+    {staticClass}{methodClass}{entityClass}"
+            .Replace("\r\n", "\n");
 
-";
-
-    public static string MethodClass(string methodName, string methodParams, string sqlParams, string returnType, string queryAssignment) =>
-        $@"
-public partial class Database
-{{
-    public {returnType} {methodName}({methodParams})
+        public static string StaticClass(string methodName, string content, string scriptTypeClassName) =>
+            $@"
+    public static partial class {scriptTypeClassName}
     {{
-        {sqlParams}
-        {queryAssignment};
+        public const string {methodName} = @""
+    {content.Replace("\"", "\"\"")}"";
+    }}
+
+    ";
+
+        public static string MethodClass(string methodName, string methodParams, string sqlParams, string returnType, string queryAssignment) =>
+            $@"
+    public partial class Database
+    {{
+        public {returnType} {methodName}({methodParams})
+        {{
+            {sqlParams}
+            {queryAssignment};
+        }}
     }}
 }}
 ";
@@ -48,6 +52,16 @@ public partial class Database
         if (!isQuery)
         {
             return "bool";
+        }
+
+        if (isScalar && scalarTypeName == "string?")
+        {
+            return "string";
+        }
+
+        if (isScalar && scalarTypeName == "byte[]?")
+        {
+            return "byte[]";
         }
 
         if (isScalar)
@@ -70,10 +84,10 @@ public class {entityName}
 
     public static string Parameters(string sqlParams) =>
         string.IsNullOrWhiteSpace(sqlParams)
-        ? "SqlParameter[] parameters = [];"
-        : $@"SqlParameter[] parameters =
-        [{sqlParams}
-        ];
+        ? "SqlParameter[] parameters = new SqlParameter[0];"
+        : $@"SqlParameter[] parameters = new SqlParameter[]
+        {{{sqlParams}
+        }};
 ";
 
     public static string PropertyString(string dataType, string nullFlag, string columnName, string defaultValue) =>
@@ -85,7 +99,7 @@ public class {entityName}
 
     public static string QueryAssignment(string entityName, string methodName, string propertySet, string scriptTypeClassName) =>
         @$"SqlDataReader dr = Generic_OpenReader(parameters, {scriptTypeClassName}.{methodName});
-		List<{entityName}> output = [];
+		List<{entityName}> output = new List<{entityName}>();
 		while (dr.Read())
 		{{
 			output.Add(new {entityName}
@@ -107,7 +121,7 @@ public class {entityName}
 
     public static string StoredProcedureAssignment(string entityName, string methodName, string propertySet) =>
         @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{entityName}"");
-		List<{entityName}> output = [];
+		List<{entityName}> output = new List<{entityName}>();
 		while (dr.Read())
 		{{
 			output.Add(new {entityName}
