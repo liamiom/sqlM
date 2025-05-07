@@ -29,10 +29,22 @@ internal static class StringExtension
     }
 
     public static string RegexReplace(this string input, string pattern, string replacement) => 
-        Regex.Replace(input, pattern, replacement, RegexOptions.Multiline);
+        Replace(input, pattern, replacement, RegexOptions.Multiline);
 
     public static string RegexReplace(this string input, string pattern, string replacement, RegexOptions options) =>
-        Regex.Replace(input, pattern, replacement, options);
+        Replace(input, pattern, replacement, options);
+
+    private static string Replace(string input, string pattern, string replacement, RegexOptions options, int timeoutSeconds = 2)
+    {
+        try
+        {
+            return Regex.Replace(input, pattern, replacement, options, new TimeSpan(0, 0, timeoutSeconds));
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return input;
+        }
+    }
 
     public static string[] RegexMatchAll(this string input, string pattern, RegexOptions options = RegexOptions.IgnoreCase) =>
         Regex.Matches(input, pattern, options).Select(x => x.Value).ToArray();
