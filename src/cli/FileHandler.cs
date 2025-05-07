@@ -30,11 +30,11 @@ internal class FileHandler
 
     public static FileCollection GetFiles(Container state)
     {
-        string queryScriptsPath = Path.Combine(state.SourceDirectory, "Query");
-        string tableScriptsPath = Path.Combine(state.SourceDirectory, "Table");
-        string viewScriptsPath = Path.Combine(state.SourceDirectory, "View");
-        string functionScriptsPath = Path.Combine(state.SourceDirectory, "Function");
-        string storedProcedureScriptsPath = Path.Combine(state.SourceDirectory, "StoredProcedure");
+        string queryScriptsPath = Path.Combine(state.SourceDirectory, "Queries");
+        string tableScriptsPath = Path.Combine(state.SourceDirectory, "Tables");
+        string viewScriptsPath = Path.Combine(state.SourceDirectory, "Views");
+        string functionScriptsPath = Path.Combine(state.SourceDirectory, "Functions");
+        string storedProcedureScriptsPath = Path.Combine(state.SourceDirectory, "Procedures");
         
         // Add or update the Query read me file
         if (!Directory.Exists(queryScriptsPath))
