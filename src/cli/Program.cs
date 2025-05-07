@@ -34,7 +34,7 @@ if (!Directory.GetFiles(Environment.CurrentDirectory, "*.csproj").Any())
     return;
 }
 
-if (!DotNet.CheckForReference("System.Data.SqlClient"))
+if (DotNet.IsDotnetCoreProject() && !DotNet.CheckForReference("System.Data.SqlClient"))
 {
     AnsiConsole.MarkupLine($@"
 [red]I can't find System.Data.SqlClient in this project.[/]
