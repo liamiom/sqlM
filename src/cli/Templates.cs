@@ -119,7 +119,7 @@ namespace sqlM
         @$"return Generic_ExecuteNonQuery(parameters, {scriptTypeClassName}.{methodName}) != 0";
 
     public static string StoredProcedureAssignment(string entityName, string methodName, string propertySet) =>
-        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{entityName}"");
+        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{methodName}"");
 		    List<{entityName}> output = new List<{entityName}>();
 		    while (dr.Read())
 		    {{
