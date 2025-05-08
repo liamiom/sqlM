@@ -54,12 +54,12 @@ internal class StoredProcedureFile
         {
             methodParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n            {SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
+                .Select(i => $"\n\t\t\t{SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
                 .Aggregate((a, b) => $"{a},{b}");
 
             sqlParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n            new SqlParameter(\"{i.Key}\", {i.Key}),")
+                .Select(i => $"\n\t\t\t\tnew SqlParameter(\"{i.Key}\", {i.Key}),")
                 .Aggregate((a, b) => $"{a}{b}");
         }
 
@@ -93,7 +93,7 @@ internal class StoredProcedureFile
                 DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? ""),
                 NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
                 ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
-                DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
+                DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = string.Empty;" : ""),
                 Index = index
             })
             .ToList();

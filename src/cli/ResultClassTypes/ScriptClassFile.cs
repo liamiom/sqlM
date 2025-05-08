@@ -101,7 +101,7 @@ internal class ScriptClassFile : BaseClassFile
     private static string GetNewObject(List<Column> properties) =>
         properties
             .Select(i =>
-                $"\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
+                $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
             )
             .ToMultiLineString();
 
