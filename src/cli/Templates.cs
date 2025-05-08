@@ -98,21 +98,21 @@ namespace sqlM
 
     public static string QueryAssignment(string entityName, string methodName, string propertySet, string scriptTypeClassName) =>
         @$"SqlDataReader dr = Generic_OpenReader(parameters, {scriptTypeClassName}.{methodName});
-		List<{entityName}> output = new List<{entityName}>();
-		while (dr.Read())
-		{{
-			output.Add(new {entityName}
-			{{
+		    List<{entityName}> output = new List<{entityName}>();
+		    while (dr.Read())
+		    {{
+			    output.Add(new {entityName}
+			    {{
 {propertySet}
-			}});
-		}}
+			    }});
+		    }}
 
 		return output";
 
     public static string QueryScalarAssignment(string methodName, string propertySet, string scriptTypeClassName) =>
         @$"SqlDataReader dr = Generic_OpenReader(parameters, {scriptTypeClassName}.{methodName});
-		dr.Read();
-		return {propertySet};
+		    dr.Read();
+		    return {propertySet};
 		";
 
     public static string QueryNonAssignment(string methodName, string scriptTypeClassName) =>
@@ -129,12 +129,12 @@ namespace sqlM
 			    }});
 		    }}
 
-		return output";
+		    return output";
 
     public static string StoredProcedureScalarAssignment(string methodName, string propertySet) =>
         @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{methodName}"");
-		dr.Read();
-		return {propertySet};
+		    dr.Read();
+		    return {propertySet};
 		";
 
     public static string StoredProcedureNonAssignment(string methodName) =>
