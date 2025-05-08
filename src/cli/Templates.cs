@@ -75,7 +75,7 @@ namespace sqlM
         string.IsNullOrWhiteSpace(properties)
             ? string.Empty
         : $@"
-    public class {entityName} 
+    public partial class {entityName} 
     {{
 {properties}
     }}
