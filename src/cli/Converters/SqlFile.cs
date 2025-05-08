@@ -27,8 +27,37 @@ internal class SqlFile
             .RegexMatchAll(@"@[\w\d]+\s+\[?(int|datetime|date|time|decimal|bit|varchar|char|varbinary|float|text|nvarchar)+\]?")
             .Select(i => i.Trim().Split(' '))
             .Where(i => i.Length == 2)
-            .Select(i => new KeyValuePair<string, Type>(i[0], GetTypeFromTidySqlName(i[1])))
+            .Select(i => new KeyValuePair<string, Type>(TidyParamName(i[0]), GetTypeFromTidySqlName(i[1])))
             .ToList();
+    }
+
+
+    private static string TidyParamName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return name;
+        }
+
+        // Todo: This is just the first example to come up, this should check the C# reserved work list.
+        // It looks like this is possible using System.CodeDom.Compiler.CodeDomProvider CSprovider
+        string[] skipList = ["@class"];
+        if (skipList.Any(i => i.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return name;
+        }
+
+        if (name.StartsWith('@'))
+        {
+            name = name[1..];
+        }
+
+        if (name.Length > 1 && name != name.ToUpper())
+        {
+            name = name[..1].ToLower() + name[1..];
+        }
+
+        return name;
     }
 
     public static string GetFileHash(string fileName)
