@@ -135,11 +135,23 @@ internal class FileHandler
         foreach (BaseClassFile classFile in classFiles)
         {
             string fullFileName = Path.Combine(state.OutputDirectory, classFile.FileName);
-            System.IO.File.WriteAllText(fullFileName, classFile.Content);
+            SaveIfChanged(fullFileName, classFile.Content);
             taskProgress.Increment(1);
         }
      
         return true;
+    }
+
+    private static void SaveIfChanged(string fileName, string updatedContent)
+    {
+        string currentContent = System.IO.File.Exists(fileName)
+            ? System.IO.File.ReadAllText(fileName)
+            : "";
+
+        if (currentContent != updatedContent)
+        {
+            System.IO.File.WriteAllText(fileName, updatedContent);
+        }
     }
 
     private static BaseClassFile GetBaseClassFile(Container state)
