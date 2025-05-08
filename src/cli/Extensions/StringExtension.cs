@@ -36,6 +36,11 @@ internal static class StringExtension
 
     private static string Replace(string input, string pattern, string replacement, RegexOptions options, int timeoutSeconds = 2)
     {
+        if (string.IsNullOrEmpty(pattern))
+        {
+            return "";
+        }
+
         try
         {
             return Regex.Replace(input, pattern, replacement, options, new TimeSpan(0, 0, timeoutSeconds));
@@ -51,6 +56,9 @@ internal static class StringExtension
 
     public static string RegexFind(this string input, string pattern) =>
         Regex.Match(input, pattern, RegexOptions.Multiline).ToString();
+
+    public static string RegexFind(this string input, string pattern, string replacement) =>
+        Regex.Match(input, pattern, RegexOptions.Multiline).ToString().RegexReplace(pattern, replacement);
 
     public static string AnsiSafe(this string input) =>
         input.Replace("[", "[[").Replace("]", "]]");

@@ -8,6 +8,7 @@ public class File
     public string FileName { get; set; }
     public string CleanFileName { get; set; }
     public string EntityName { get; set; }
+    public string ObjectName { get; set; }
     public string Path { get; set; }
     public string Hash { get; set; }
     public string Content { get; set; }

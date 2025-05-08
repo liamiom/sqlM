@@ -15,8 +15,13 @@ internal class StoredProcedureFile
         string spClean = Regex.Replace(content, @".*(CREATE|ALTER)\s+PROCEDURE\s*(\[\S+\]\.)\[?([^\]|\s]+)\]?(.*)AS\s*\n.*", "$3--- PARAMS ---\n$4", RegexOptions.Singleline | RegexOptions.IgnoreCase);
         string[] cleanLines = spClean.Split("--- PARAMS ---");
 
-        string entityName = cleanLines.FirstOrDefault("");
+        string objectName = cleanLines.FirstOrDefault("");
         string paramText = cleanLines.LastOrDefault("");
+
+        string typeNameOverride = content.RegexFind(@"--\W+typename\W*=\W*([^\W]+).*", @"$1");
+        string entityName = string.IsNullOrWhiteSpace(typeNameOverride)
+            ? objectName
+            : typeNameOverride;
 
         List<KeyValuePair<string, Type>> parms = SqlFile.GetParams(paramText);
 
@@ -29,6 +34,7 @@ internal class StoredProcedureFile
             FileName = fileName,
             CleanFileName = SqlFile.CleanFileName(fileName),
             EntityName = entityName,
+            ObjectName = objectName,
             Content = content,
             Paramiters = parms,
             Names = new Dictionary<string, string>(),
@@ -48,7 +54,7 @@ internal class StoredProcedureFile
         {
             methodParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n        {SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
+                .Select(i => $"\n            {SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
                 .Aggregate((a, b) => $"{a},{b}");
 
             sqlParams =
@@ -112,7 +118,7 @@ internal class StoredProcedureFile
 
 
             // Execute the stored procedure to get the table schema
-            SqlCommand runCmd = new(script.EntityName, conn, transaction)
+            SqlCommand runCmd = new(script.ObjectName, conn, transaction)
             {
                 CommandType = CommandType.StoredProcedure
             };
