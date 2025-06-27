@@ -62,12 +62,14 @@ internal class FileHandler
 
     public static SqlFile[] GetSqlFiles(FileCollection files, ProgressTask taskProgress)
     {
-        List<SqlFile> sqlFiles = new();
-        sqlFiles.AddRange(files.Query.Select(i => Converters.QueryFile.Parse(i, files.QueryPath, taskProgress)));
-        sqlFiles.AddRange(files.Table.Select(i => Converters.TableFile.Parse(i, files.TablePath, taskProgress)));
-        sqlFiles.AddRange(files.View.Select(i => Converters.ViewFile.Parse(i, files.ViewPath, taskProgress)));
-        sqlFiles.AddRange(files.Function.Select(i => Converters.FunctionFile.Parse(i, files.FunctionPath, taskProgress)));
-        sqlFiles.AddRange(files.StoredProcedure.Select(i => Converters.StoredProcedureFile.Parse(i, files.StoredProcedurePath, taskProgress)));
+        List<SqlFile> sqlFiles =
+        [
+            .. files.Query.Select(i => Converters.QueryFile.Parse(i, files.QueryPath, taskProgress)),
+            .. files.Table.Select(i => Converters.TableFile.Parse(i, files.TablePath, taskProgress)),
+            .. files.View.Select(i => Converters.ViewFile.Parse(i, files.ViewPath, taskProgress)),
+            .. files.Function.Select(i => Converters.FunctionFile.Parse(i, files.FunctionPath, taskProgress)),
+            .. files.StoredProcedure.Select(i => Converters.StoredProcedureFile.Parse(i, files.StoredProcedurePath, taskProgress)),
+        ];
 
         return sqlFiles.ToArray();
     }
@@ -268,8 +270,16 @@ internal class FileHandler
         SqlConnection conn = new(state.ConnectionString);
         conn.Open();
         SqlTransaction transaction = conn.BeginTransaction();
+        var updatableTypes = new SqlFile.ObjectTypes[]
+        {
+            SqlFile.ObjectTypes.Table,
+            SqlFile.ObjectTypes.View,
+            SqlFile.ObjectTypes.Function,
+            SqlFile.ObjectTypes.StoredProcedure,
+        };
+        var updatableSqlFiles = state.SqlFiles.Where(i => updatableTypes.Contains(i.ScriptType));
 
-        foreach (var sqlFile in state.SqlFiles)
+        foreach (var sqlFile in updatableSqlFiles)
         {
             var (result, error) = RunUpdateScript(sqlFile, conn, transaction);
             if (!result)
