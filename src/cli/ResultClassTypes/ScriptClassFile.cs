@@ -86,6 +86,7 @@ internal class ScriptClassFile : BaseClassFile
         properties
             .Select(i =>
                 Templates.PropertyString(
+                    DotNet.IsDotnetCoreProject() ? "required ": "",
                     i.DataType,
                     FilterOutUnstupportedNullableTypes(i.DataType, i.NullFlag),
                     i.ColumnName,
@@ -95,7 +96,10 @@ internal class ScriptClassFile : BaseClassFile
             .ToMultiLineString();
 
     private static string FilterOutUnstupportedNullableTypes(string dataType, string nullFlag) =>
-         dataType == "string" || dataType == "byte[]" ? "" : nullFlag;
+        (!DotNet.IsDotnetCoreProject() && dataType == "string") || 
+        dataType == "byte[]" 
+            ? "" 
+            : nullFlag;
 
 
     private static string GetNewObject(List<Column> properties) =>

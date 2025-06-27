@@ -16,7 +16,7 @@ internal static class Templates
 // ##########################################################################################
 
 using System;
-using System.Data.SqlClient;
+using {(DotNet.IsDotnetCoreProject() ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient")};
 using System.Collections.Generic;
 
 namespace sqlM
@@ -89,8 +89,8 @@ namespace sqlM
             }};
 ";
 
-    public static string PropertyString(string dataType, string nullFlag, string columnName, string defaultValue) =>
-        $"\t\tpublic {dataType}{nullFlag} {columnName} {{ get; set; }}{defaultValue}";
+    public static string PropertyString(string requiredFlag, string dataType, string nullFlag, string columnName, string defaultValue) =>
+        $"\t\tpublic {requiredFlag}{dataType}{nullFlag} {columnName} {{ get; set; }}{defaultValue}";
 
 
     public static string PropertySet(string dataType, string nullFlag, string columnName) =>

@@ -39,7 +39,7 @@ internal class SqlFile
             return name;
         }
 
-        // Todo: This is just the first example to come up, this should check the C# reserved work list.
+        // Todo: This is just the first example to come up, this should check the C# reserved word list.
         // It looks like this is possible using System.CodeDom.Compiler.CodeDomProvider CSprovider
         string[] skipList = ["@class"];
         if (skipList.Any(i => i.Equals(name, StringComparison.InvariantCultureIgnoreCase)))

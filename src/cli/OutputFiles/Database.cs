@@ -12,7 +12,7 @@
 
 
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
 
 namespace sqlM
@@ -20,8 +20,8 @@ namespace sqlM
     public partial class Database
     {
         private string _connectionString;
-        public event EventHandler<UpdateScript> RunningScript;
-        public event EventHandler<UpdateScript> ScriptError;
+        public event EventHandler<UpdateScript>? RunningScript;
+        public event EventHandler<UpdateScript>? ScriptError;
 
         public Database(string connectionString)
         {
@@ -178,7 +178,7 @@ namespace sqlM
             dr.IsDBNull(i) ? new byte[0] : dr.GetByteArray(i);
         public static Guid? GetNullableGuid(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new Guid?() : dr.GetGuid(i);
-        public static string GetNullableString(this SqlDataReader dr, int i) =>
+        public static string? GetNullableString(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? null : dr.GetString(i);
     }
 

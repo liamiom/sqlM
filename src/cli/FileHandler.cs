@@ -2,7 +2,7 @@
 using sqlM.Extensions;
 using sqlM.ResultClassTypes;
 using sqlM.State;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Diagnostics;
 using System.Reflection;
@@ -170,6 +170,23 @@ internal class FileHandler
             $"UpdateScript[] updateScripts = Array.Empty<UpdateScript>(); // Database update scripts go here", 
             $"UpdateScript[] updateScripts = new UpdateScript[] {{ \n{updateScripts} \t\t}};"
             );
+
+        if (!DotNet.IsDotnetCoreProject())
+        {
+            dbFile.Content = dbFile.Content.Replace(
+                    "using Microsoft.Data.SqlClient;",
+                    "using System.Data.SqlClient;"
+                ).Replace(
+                    "public event EventHandler<UpdateScript>? RunningScript;",
+                    "public event EventHandler<UpdateScript> RunningScript;"
+                ).Replace(
+                    "public event EventHandler<UpdateScript>? ScriptError;",
+                    "public event EventHandler<UpdateScript> ScriptError;"
+                ).Replace(
+                    "public static string? GetNullableString",
+                    "public static string GetNullableString"
+                );
+        }
 
         return dbFile;
     }

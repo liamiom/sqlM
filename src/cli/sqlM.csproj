@@ -46,7 +46,7 @@
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.35" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
   </ItemGroup>
 
   <!-- Dotnet Tool Specific settings -->

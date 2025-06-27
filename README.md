@@ -22,7 +22,7 @@ This will generate a new class that allows database access. The new class will c
 ``` C#
 using sqlM;
 
-Database db = new Database("Data Source=localhost;Initial Catalog=MyDatabase;Integrated Security=SSPI;");
+Database db = new Database("Data Source=localhost;Initial Catalog=MyDatabase;Integrated Security=SSPI;TrustServerCertificate=True;");
 
 List<Customer_Result> customers = db.Customer();
 

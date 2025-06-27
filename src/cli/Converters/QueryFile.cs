@@ -2,7 +2,7 @@
 using sqlM.ResultClassTypes;
 using sqlM.State;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace sqlM.Converters;
 internal class QueryFile

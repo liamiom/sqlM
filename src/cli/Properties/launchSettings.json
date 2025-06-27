@@ -9,6 +9,10 @@
       "commandName": "Project",
       "commandLineArgs": "help",
       "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+    },
+    "Menu": {
+      "commandName": "Project",
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
     }
   }
 }

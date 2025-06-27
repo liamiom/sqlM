@@ -34,14 +34,13 @@ if (!Directory.GetFiles(Environment.CurrentDirectory, "*.csproj").Any())
     return;
 }
 
-if (DotNet.IsDotnetCoreProject() && !DotNet.CheckForReference("System.Data.SqlClient"))
+if (DotNet.IsDotnetCoreProject() && !DotNet.CheckForReference("Microsoft.Data.SqlClient"))
 {
     AnsiConsole.MarkupLine($@"
-[red]I can't find System.Data.SqlClient in this project.[/]
-Try adding a System.Data.SqlClient reference and then runing sqlM again. You can do this from the dotnet tool like this.
+[red]I can't find Microsoft.Data.SqlClient in this project.[/]
+This could cause build errors, if the reference is missing try adding Microsoft.Data.SqlClient before building your app. You can do this from the dotnet tool like this.
 
-dotnet add package System.Data.SqlClient");
-    return;
+dotnet add package Microsoft.Data.SqlClient");
 }
 
 if (!Config.TryLoad(out sqlM.State.Container state))
