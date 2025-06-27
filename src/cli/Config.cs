@@ -56,8 +56,8 @@ internal class Config
 
     public static string MakeConnectionString(string serverName, string userName = "", string password = "", string database = "master") =>
         string.IsNullOrWhiteSpace(userName)
-            ? $"Data Source={serverName};Initial Catalog={database};Integrated Security=SSPI;"
-            : $"Data Source={serverName};Initial Catalog={database};User id={userName};Password={password}";
+            ? $"Data Source={serverName};Initial Catalog={database};Integrated Security=SSPI;TrustServerCertificate=True;"
+            : $"Data Source={serverName};Initial Catalog={database};User id={userName};Password={password};TrustServerCertificate=True;";
 
     public static void Save(State.Container config)
     {
