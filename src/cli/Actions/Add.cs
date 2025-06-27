@@ -38,34 +38,25 @@ public class Add : IAction
         }
     }
 
-    private static void Functions(StartupParams startupParams, State.Container state)
-    {
-        GetFile(startupParams, state, startupParams.ObjectType.ToString());
-    }
+    private static void Functions(StartupParams startupParams, State.Container state) => 
+        GetFile(startupParams, state, startupParams.ObjectType);
 
-    private static void Query(StartupParams startupParams, State.Container state)
-    {
-        GetFile(startupParams, state, startupParams.ObjectType.ToString());
-    }
+    private static void Query(StartupParams startupParams, State.Container state) => 
+        GetFile(startupParams, state, startupParams.ObjectType);
 
-    private static void StoredProcedure(StartupParams startupParams, State.Container state)
-    {
-        GetFile(startupParams, state, startupParams.ObjectType.ToString());
-    }
+    private static void StoredProcedure(StartupParams startupParams, State.Container state) => 
+        GetFile(startupParams, state, startupParams.ObjectType);
 
-    private static void Table(StartupParams startupParams, State.Container state)
-    {
-        GetFile(startupParams, state, startupParams.ObjectType.ToString());
-    }
+    private static void Table(StartupParams startupParams, State.Container state) => 
+        GetFile(startupParams, state, startupParams.ObjectType);
 
-    private static void View(StartupParams startupParams, State.Container state)
-    {
-        GetFile(startupParams, state, startupParams.ObjectType.ToString());
-    }
+    private static void View(StartupParams startupParams, State.Container state) => 
+        GetFile(startupParams, state, startupParams.ObjectType);
 
-    private static void GetFile(StartupParams startupParams, State.Container state, string objectTypeString)
+    private static void GetFile(StartupParams startupParams, State.Container state, StartupParams.ObjectTypes objectType)
     {
-        BaseClassFile fileResult = FileHandler.GetEmbeddedFile($"{objectTypeString}.sql", $"{startupParams.Name}.sql");
+        string objectTypeString = GetPath(objectType);
+        BaseClassFile fileResult = FileHandler.GetEmbeddedFile($"{objectType}.sql", $"{startupParams.Name}.sql");
         string fullFileName = Path.Combine(state.SourceDirectory, objectTypeString, fileResult.FileName);
         string relativePath = Path.GetRelativePath(state.SourceDirectory, fullFileName);
 
@@ -101,6 +92,17 @@ public class Add : IAction
             Console.WriteLine($"{relativePath} created");
         }
     }
+
+    private static string GetPath(StartupParams.ObjectTypes objectType) => 
+        objectType switch
+            {
+                StartupParams.ObjectTypes.Query => "Queries",
+                StartupParams.ObjectTypes.Table => "Tables",
+                StartupParams.ObjectTypes.View => "Views",
+                StartupParams.ObjectTypes.Function => "Functions",
+                StartupParams.ObjectTypes.StoredProcedure => "Procedures",
+                _ => "",
+            };
 
     private static void OpenWithDefaultProgram(string path)
     {
