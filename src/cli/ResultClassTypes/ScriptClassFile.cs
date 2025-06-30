@@ -60,7 +60,6 @@ internal class ScriptClassFile : BaseClassFile
                 .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
                 .Join(", ");
             string getFilter = GetCrudGetFilter(columns);
-            //string getSqlParams = Templates.Parameters(sqlParams);
             string updateSet = columns
                 .Where(i => !i.IsIdentity)
                 .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
@@ -74,10 +73,9 @@ internal class ScriptClassFile : BaseClassFile
                 .Where(i => !i.IsIdentity)
                 .Select(i => "@" + i.ColumnName)
                 .Join(Environment.NewLine + "                    ,");
-            string instert = $@"INSERT INTO MethodName ({insertColumns})";
 
 
-            crudClass = Templates.CrudClass(MethodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), SqlParams, updateParams, updateSet, MethodName, queryAssignment);
+            crudClass = Templates.CrudClass(MethodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), SqlParams, updateParams, updateSet, MethodName, insertColumns, insertParams);
         }
 
         string entityTypeClass = isScalar

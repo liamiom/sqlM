@@ -158,6 +158,9 @@ namespace sqlM
             Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
                 .Replace("GO", "¬")
                 .Split('¬');
+
+        public static SqlParameter ToSqlParameter(string name, object? value) =>
+            new SqlParameter(name, value ?? DBNull.Value);
     }
 
     public static class TypeExtensions

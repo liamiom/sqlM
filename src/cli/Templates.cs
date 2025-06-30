@@ -46,7 +46,7 @@ namespace sqlM
     }}
 ";
 
-    public static string CrudClass(string methodName, string getParams, string getFilter, string entityName, string propertySet, string queryParams, string updateParams, string updateSet, string returnType, string queryAssignment) =>
+    public static string CrudClass(string methodName, string getParams, string getFilter, string entityName, string propertySet, string queryParams, string updateParams, string updateSet, string returnType, string insertColumns, string insertParams) =>
         $@"
     public partial class Database
     {{
@@ -68,16 +68,49 @@ namespace sqlM
 		    return output;
         }}
 
-        public int {methodName}_Set({returnType} item)
+        public int {methodName}_Set({returnType} item) =>
+            item.ID > 0
+                ? {methodName}_Update(item)
+                : {methodName}_Add(item);
+
+
+        public int {methodName}_Update({returnType} item)
         {{
             {updateParams}
             string script = @""
                 UPDATE {methodName} 
                 SET
                      {updateSet}
-                {getFilter}"";
-            Generic_ExecuteNonQuery(parameters, script);
-            return true;
+                {getFilter}
+
+                SELECT CAST(SCOPE_IDENTITY() AS int) "";
+
+            SqlDataReader dr = Generic_OpenReader(parameters, script);
+            dr.Read();
+            return dr[0] is DBNull
+                ? -1 
+                : (int)dr[0];
+        }}
+
+        public int {methodName}_Add({returnType} item)
+        {{
+            {updateParams}
+            string script = @""
+                INSERT INTO {methodName} (
+                    {insertColumns}
+                )
+                VALUES (
+                    {insertParams}
+                )
+
+                SELECT CAST(SCOPE_IDENTITY() AS int) 
+                "";
+
+            SqlDataReader dr = Generic_OpenReader(parameters, script);
+            dr.Read();
+            return dr[0] is DBNull
+                ? -1 
+                : (int)dr[0];
         }}
 
         public bool {methodName}_Del({getParams})
