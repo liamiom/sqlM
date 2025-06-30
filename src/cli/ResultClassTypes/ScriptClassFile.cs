@@ -19,7 +19,9 @@ internal class ScriptClassFile : BaseClassFile
         string methodParams,
         string sqlParams,
         ObjectReturnTypes objectType,
-        State.SqlFile.ObjectTypes ScriptType)
+        State.SqlFile.ObjectTypes ScriptType,
+        string updateParams = ""
+        )
     {
         FileName = fileName;
         EntityName = entityName;
@@ -28,6 +30,8 @@ internal class ScriptClassFile : BaseClassFile
         SqlContent = sqlContent.Trim();
         MethodParams = methodParams;
         SqlParams = Templates.Parameters(sqlParams);
+        updateParams = Templates.Parameters(updateParams);
+        
 
 
         bool isQuery = Columns?.Count > 0;
@@ -47,11 +51,40 @@ internal class ScriptClassFile : BaseClassFile
         string methodClass = ScriptType == State.SqlFile.ObjectTypes.Query || ScriptType == State.SqlFile.ObjectTypes.StoredProcedure
             ? Templates.MethodClass(MethodName, MethodParams, SqlParams, returnType, queryAssignment)
             : "";
+
+        string crudClass = "";
+        if (ScriptType == State.SqlFile.ObjectTypes.Table)
+        {
+            string getParams = columns
+                .Where(i => i.IsIdentity)
+                .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
+                .Join(", ");
+            string getFilter = GetCrudGetFilter(columns);
+            //string getSqlParams = Templates.Parameters(sqlParams);
+            string updateSet = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
+                .Join(Environment.NewLine + "                    ,");
+
+            string insertColumns = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => i.ColumnName)
+                .Join(Environment.NewLine + "                    ,");
+            string insertParams = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => "@" + i.ColumnName)
+                .Join(Environment.NewLine + "                    ,");
+            string instert = $@"INSERT INTO MethodName ({insertColumns})";
+
+
+            crudClass = Templates.CrudClass(MethodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), SqlParams, updateParams, updateSet, MethodName, queryAssignment);
+        }
+
         string entityTypeClass = isScalar
             ? ""
             : Templates.EntityTypeClass(EntityName, GetPropertyClassLines(Columns));
 
-        Content = Templates.JoinClasses(staticClass, methodClass, entityTypeClass);
+        Content = Templates.JoinClasses(staticClass, methodClass, crudClass, entityTypeClass);
     }
 
     private static string GetAssignment(ObjectReturnTypes objectType, string entityName, string methodName, List<Column> columns, string typeStaticClassName) => 
@@ -108,6 +141,17 @@ internal class ScriptClassFile : BaseClassFile
                 $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
             )
             .ToMultiLineString();
+
+    private static string GetCrudGetFilter(List<Column> columns) =>
+        columns.Count == 0
+            ? ""
+        : "WHERE " + columns
+            .Where(i => i.IsIdentity)
+            .Select(GetCrudGetFilterItem)
+            .Join(" AND ");
+
+    private static string GetCrudGetFilterItem(Column column) =>
+        $"{column.ColumnName} = ISNULL(@{column.ColumnName}, {column.ColumnName})";
 
     private static string GetTypeRequest(string dataType) =>
         dataType switch

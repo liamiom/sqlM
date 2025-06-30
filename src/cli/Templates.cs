@@ -2,7 +2,7 @@
 
 internal static class Templates
 {
-    public static string JoinClasses(string staticClass, string methodClass, string entityClass) =>
+    public static string JoinClasses(string staticClass, string methodClass, string crudMethods, string entityClass) =>
         $@"
 // ##########################################################################################
 // #                                                                                        #
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 
 namespace sqlM
 {{
-    {staticClass}{methodClass}{entityClass}
+    {staticClass}{methodClass}{crudMethods}{entityClass}
 }}"
             .Replace("\r\n", "\n");
 
@@ -45,6 +45,53 @@ namespace sqlM
         }}
     }}
 ";
+
+    public static string CrudClass(string methodName, string getParams, string getFilter, string entityName, string propertySet, string queryParams, string updateParams, string updateSet, string returnType, string queryAssignment) =>
+        $@"
+    public partial class Database
+    {{
+        public List<{entityName}> {methodName}_Get({getParams})
+        {{
+            string script = @""SELECT * FROM {methodName} {getFilter}"";
+
+            {queryParams}
+            SqlDataReader dr = Generic_OpenReader(parameters, script);
+            List<{entityName}> output = new List<{entityName}>();
+		    while (dr.Read())
+		    {{
+			    output.Add(new {entityName}
+			    {{
+{propertySet}
+			    }});
+		    }}
+
+		    return output;
+        }}
+
+        public int {methodName}_Set({returnType} item)
+        {{
+            {updateParams}
+            string script = @""
+                UPDATE {methodName} 
+                SET
+                     {updateSet}
+                {getFilter}"";
+            Generic_ExecuteNonQuery(parameters, script);
+            return true;
+        }}
+
+        public bool {methodName}_Del({getParams})
+        {{
+            string script = @""DELETE {methodName} {getFilter}"";
+            {queryParams}
+            Generic_ExecuteNonQuery(parameters, script);
+            return true;
+        }}
+    }}
+";
+
+    public static string CrudInsert()
+        => "";
 
     public static string ReturnType(bool isQuery, bool isScalar, string entityName, string scalarTypeName)
     {
