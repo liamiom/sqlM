@@ -58,13 +58,13 @@ internal class TableFile
 
             sqlParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n            ToSqlParameter(\"{i.Key}\", {i.Key}),")
+                .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", {i.Key}),")
                 .Aggregate((a, b) => $"{a}{b}");
         }
 
         string updateParams = columns
             .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
-            .Select(i => $"\n            ToSqlParameter(\"{i.Key}\", item.{i.Key}),")
+            .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", item.{i.Key}),")
             .Aggregate((a, b) => $"{a}{b}");
 
 

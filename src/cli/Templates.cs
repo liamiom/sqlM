@@ -85,11 +85,10 @@ namespace sqlM
 
                 SELECT CAST(SCOPE_IDENTITY() AS int) "";
 
-            SqlDataReader dr = Generic_OpenReader(parameters, script);
-            dr.Read();
-            return dr[0] is DBNull
-                ? -1 
-                : (int)dr[0];
+            object result = Generic_OpenSingle(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
         }}
 
         public int {methodName}_Add({returnType} item)
@@ -106,11 +105,10 @@ namespace sqlM
                 SELECT CAST(SCOPE_IDENTITY() AS int) 
                 "";
 
-            SqlDataReader dr = Generic_OpenReader(parameters, script);
-            dr.Read();
-            return dr[0] is DBNull
-                ? -1 
-                : (int)dr[0];
+            object result = Generic_OpenSingle(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
         }}
 
         public bool {methodName}_Del({getParams})
