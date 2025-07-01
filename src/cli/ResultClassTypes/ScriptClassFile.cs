@@ -49,40 +49,44 @@ internal class ScriptClassFile : BaseClassFile
         string returnType = Templates.ReturnType(isQuery, isScalar, EntityName, scalarTypeName);
         string staticClass = Templates.StaticClass(MethodName, SqlContent, typeStaticClassName);
         string methodClass = ScriptType == State.SqlFile.ObjectTypes.Query || ScriptType == State.SqlFile.ObjectTypes.StoredProcedure
-            ? Templates.MethodClass(MethodName, MethodParams, SqlParams, returnType, queryAssignment)
+            ? Templates.MethodClass(methodName, methodParams, sqlParams, returnType, queryAssignment)
             : "";
-
-        string crudClass = "";
-        if (ScriptType == State.SqlFile.ObjectTypes.Table)
-        {
-            string getParams = columns
-                .Where(i => i.IsIdentity)
-                .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
-                .Join(", ");
-            string getFilter = GetCrudGetFilter(columns);
-            string updateSet = columns
-                .Where(i => !i.IsIdentity)
-                .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
-                .Join(Environment.NewLine + "                    ,");
-
-            string insertColumns = columns
-                .Where(i => !i.IsIdentity)
-                .Select(i => i.ColumnName)
-                .Join(Environment.NewLine + "                    ,");
-            string insertParams = columns
-                .Where(i => !i.IsIdentity)
-                .Select(i => "@" + i.ColumnName)
-                .Join(Environment.NewLine + "                    ,");
-
-
-            crudClass = Templates.CrudClass(MethodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), SqlParams, updateParams, updateSet, MethodName, insertColumns, insertParams);
-        }
+        string crudClass = CrudClass(ScriptType, columns, methodName, entityName, sqlParams, updateParams);
 
         string entityTypeClass = isScalar
             ? ""
             : Templates.EntityTypeClass(EntityName, GetPropertyClassLines(Columns));
 
         Content = Templates.JoinClasses(staticClass, methodClass, crudClass, entityTypeClass);
+    }
+
+    private static string CrudClass(State.SqlFile.ObjectTypes ScriptType, List<Column> columns, string methodName, string EntityName, string sqlParams, string updateParams)
+    {
+        if (ScriptType != State.SqlFile.ObjectTypes.Table)
+        {
+            return "";
+        }
+
+        string getParams = columns
+            .Where(i => i.IsIdentity)
+            .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
+            .Join(", ");
+        string getFilter = GetCrudGetFilter(columns);
+        string updateSet = columns
+            .Where(i => !i.IsIdentity)
+            .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
+            .Join(Environment.NewLine + "                    ,");
+
+        string insertColumns = columns
+            .Where(i => !i.IsIdentity)
+            .Select(i => i.ColumnName)
+            .Join(Environment.NewLine + "                    ,");
+        string insertParams = columns
+            .Where(i => !i.IsIdentity)
+            .Select(i => "@" + i.ColumnName)
+            .Join(Environment.NewLine + "                    ,");
+
+        return Templates.CrudClass(methodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), sqlParams, updateParams, updateSet, methodName, insertColumns, insertParams);
     }
 
     private static string GetAssignment(ObjectReturnTypes objectType, string entityName, string methodName, List<Column> columns, string typeStaticClassName) => 

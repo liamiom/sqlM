@@ -121,9 +121,6 @@ namespace sqlM
     }}
 ";
 
-    public static string CrudInsert()
-        => "";
-
     public static string ReturnType(bool isQuery, bool isScalar, string entityName, string scalarTypeName)
     {
         if (!isQuery)
