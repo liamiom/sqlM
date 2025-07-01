@@ -3,16 +3,16 @@
     "sqlM": {
       "commandName": "Project",
       "commandLineArgs": "Scaffold",
-      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_tableCRUD"
     },
     "Help": {
       "commandName": "Project",
       "commandLineArgs": "help",
-      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_tableCRUD"
     },
     "Menu": {
       "commandName": "Project",
-      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_CP"
+      "workingDirectory": "%UserProfile%\\wkspaces\\sqlM\\src\\Test_tableCRUD"
     }
   }
 }

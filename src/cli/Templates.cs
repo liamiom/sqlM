@@ -2,7 +2,7 @@
 
 internal static class Templates
 {
-    public static string JoinClasses(string staticClass, string methodClass, string entityClass) =>
+    public static string JoinClasses(string staticClass, string methodClass, string crudMethods, string entityClass) =>
         $@"
 // ##########################################################################################
 // #                                                                                        #
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 
 namespace sqlM
 {{
-    {staticClass}{methodClass}{entityClass}
+    {staticClass}{methodClass}{crudMethods}{entityClass}
 }}"
             .Replace("\r\n", "\n");
 
@@ -42,6 +42,81 @@ namespace sqlM
         {{
             {sqlParams}
             {queryAssignment};
+        }}
+    }}
+";
+
+    public static string CrudClass(string methodName, string getParams, string getFilter, string entityName, string propertySet, string queryParams, string updateParams, string updateSet, string returnType, string insertColumns, string insertParams) =>
+        $@"
+    public partial class Database
+    {{
+        public List<{entityName}> {methodName}_Get({getParams})
+        {{
+            string script = @""SELECT * FROM {methodName} {getFilter}"";
+
+            {queryParams}
+            SqlDataReader dr = Generic_OpenReader(parameters, script);
+            List<{entityName}> output = new List<{entityName}>();
+		    while (dr.Read())
+		    {{
+			    output.Add(new {entityName}
+			    {{
+{propertySet}
+			    }});
+		    }}
+
+		    return output;
+        }}
+
+        public int {methodName}_Set({returnType} item) =>
+            item.ID > 0
+                ? {methodName}_Update(item)
+                : {methodName}_Add(item);
+
+
+        public int {methodName}_Update({returnType} item)
+        {{
+            {updateParams}
+            string script = @""
+                UPDATE {methodName} 
+                SET
+                     {updateSet}
+                {getFilter}
+
+                SELECT CAST(SCOPE_IDENTITY() AS int) "";
+
+            object result = Generic_OpenSingle(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
+        }}
+
+        public int {methodName}_Add({returnType} item)
+        {{
+            {updateParams}
+            string script = @""
+                INSERT INTO {methodName} (
+                    {insertColumns}
+                )
+                VALUES (
+                    {insertParams}
+                )
+
+                SELECT CAST(SCOPE_IDENTITY() AS int) 
+                "";
+
+            object result = Generic_OpenSingle(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
+        }}
+
+        public bool {methodName}_Del({getParams})
+        {{
+            string script = @""DELETE {methodName} {getFilter}"";
+            {queryParams}
+            Generic_ExecuteNonQuery(parameters, script);
+            return true;
         }}
     }}
 ";

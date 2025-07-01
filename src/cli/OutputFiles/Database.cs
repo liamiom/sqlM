@@ -61,6 +61,16 @@ namespace sqlM
             return cmd.ExecuteReader();
         }
 
+        private object Generic_OpenSingle(SqlParameter[] parameters, string script)
+        {
+            SqlDataReader dr = Generic_OpenReader(parameters, script);
+            dr.Read();
+
+            return dr.FieldCount == 1
+                ? dr[0]
+                : null;
+        }
+
         private int Generic_ExecuteNonQuery(SqlParameter[] parameters, string script)
         {
             SqlConnection conn = new SqlConnection(_connectionString);
@@ -158,6 +168,9 @@ namespace sqlM
             Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
                 .Replace("GO", "¬")
                 .Split('¬');
+
+        public static SqlParameter ToSqlParameter(string name, object? value) =>
+            new SqlParameter(name, value ?? DBNull.Value);
     }
 
     public static class TypeExtensions

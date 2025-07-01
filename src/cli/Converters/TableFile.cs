@@ -2,6 +2,8 @@
 using sqlM.State;
 using Spectre.Console;
 using System.Text.RegularExpressions;
+using System.Data;
+using Microsoft.Data.SqlClient;
 
 namespace sqlM.Converters;
 internal class TableFile
@@ -37,16 +39,96 @@ internal class TableFile
 
     public static BaseClassFile GenerateClassFile(Container state, State.SqlFile sqlFile)
     {
+        string methodParams = "";
+        string sqlParams = "";
+
+        IEnumerable<DataRow> rows = GetRows(sqlFile, state.ConnectionString);
+        List<Column> columns = GetProperties(rows);
+        sqlFile.Paramiters = columns
+            .Where(i => i.IsIdentity)
+            .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
+            .ToList();
+
+        if (sqlFile.Paramiters != null && sqlFile.Paramiters?.Count > 0)
+        {
+            methodParams =
+                sqlFile.Paramiters
+                .Select(i => $"\n        {SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
+                .Aggregate((a, b) => $"{a},{b}");
+
+            sqlParams =
+                sqlFile.Paramiters
+                .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", {i.Key}),")
+                .Aggregate((a, b) => $"{a}{b}");
+        }
+
+        string updateParams = columns
+            .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
+            .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", item.{i.Key}),")
+            .Aggregate((a, b) => $"{a}{b}");
+
+
         return new ScriptClassFile(
             fileName: $"{sqlFile.CleanFileName}.cs",
             entityName: sqlFile.EntityName,
             methodName: sqlFile.CleanFileName,
-            columns: new List<Column>(),
+            columns: columns,
             sqlContent: sqlFile.Content,
-            methodParams: "",
-            sqlParams: "",
+            methodParams: methodParams,
+            sqlParams: sqlParams,
             objectType: ScriptClassFile.ObjectReturnTypes.Table,
-            ScriptType: sqlFile.ScriptType
+            ScriptType: sqlFile.ScriptType,
+            updateParams
         );
     }
+
+    private static IEnumerable<DataRow> GetRows(State.SqlFile sqlFile, string conString) =>
+        GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
+
+    private static List<Column> GetProperties(IEnumerable<DataRow> rows) =>
+        rows
+            .Select((row, index) => new Column
+            {
+                DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? ""),
+                NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
+                ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
+                DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
+                IsIdentity = (bool)row["IsIdentity"],
+                Index = index
+            })
+            .ToList();
+
+    private static DataTable? GetTableSchema(State.SqlFile script, string conString)
+    {
+        try
+        {
+            string sqlString = $"SELECT * FROM {script.EntityName}";
+            SqlConnection conn = new(conString);
+
+            conn.Open();
+            SqlTransaction transaction = conn.BeginTransaction();
+            SqlCommand cmd = new(sqlString, conn, transaction);
+
+            SqlDataReader rdr = cmd.ExecuteReader();
+            DataTable? tableSchema = rdr.GetSchemaTable();
+
+            rdr.Close();
+            transaction.Rollback();
+            conn.Close();
+
+            return tableSchema;
+        }
+        catch (Exception ex)
+        {
+            string splitterLine = "".PadRight(70, '*');
+            string errorMessage = $"\n[red]Error running {script.CleanFileName}[/]\n\n{splitterLine}\n{script.Content}\n{splitterLine}\n{ex.Message}\n".Replace("[", "[[").Replace("]", "]]");
+
+            throw new ProcessingException(ex.Message, ex, $"\n[red]Error running {script.CleanFileName}\n\n[/]{errorMessage}\n", script.FileName, script.CleanFileName);
+        }
+    }
+
+    private static object GetDefaultValue(Type type) =>
+        type.IsValueType
+            ? Activator.CreateInstance(type) ?? DBNull.Value
+            : DBNull.Value;
 }

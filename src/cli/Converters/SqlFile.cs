@@ -72,7 +72,7 @@ internal class SqlFile
             ? RemoveDuplicateSpaces(source.Replace("  ", " ")) 
             : source;
 
-    private static Type GetTypeFromTidySqlName(string sqlType) => 
+    public static Type GetTypeFromTidySqlName(string sqlType) => 
         sqlType.Trim().ToLower().Replace("[", "").Replace("]", "") switch
         {
             "int" => typeof(int),
