@@ -49,9 +49,9 @@ internal class ScriptClassFile : BaseClassFile
         string returnType = Templates.ReturnType(isQuery, isScalar, EntityName, scalarTypeName);
         string staticClass = Templates.StaticClass(MethodName, SqlContent, typeStaticClassName);
         string methodClass = ScriptType == State.SqlFile.ObjectTypes.Query || ScriptType == State.SqlFile.ObjectTypes.StoredProcedure
-            ? Templates.MethodClass(methodName, methodParams, sqlParams, returnType, queryAssignment)
+            ? Templates.MethodClass(MethodName, MethodParams, SqlParams, returnType, queryAssignment)
             : "";
-        string crudClass = CrudClass(ScriptType, columns, methodName, entityName, sqlParams, updateParams);
+        string crudClass = CrudClass(ScriptType, columns, MethodName, entityName, SqlParams, updateParams);
 
         string entityTypeClass = isScalar
             ? ""
