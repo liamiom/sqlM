@@ -4,12 +4,6 @@ internal class ScriptClassFile : BaseClassFile
 {
     public enum ObjectReturnTypes { QueryResult, QueryScalarResult, QueryNoResult, StoredProcedureResult, StoredProcedureScalarResult, StoredProcedureNoResult, Table, View, Function }
 
-    private List<Column> Columns { get; set; }
-    private string MethodName { get; set; }
-    private string SqlContent { get; set; }
-    private string MethodParams { get; set; }
-    private string SqlParams { get; set; }
-
     public ScriptClassFile(
         string fileName,
         string entityName,
@@ -20,86 +14,139 @@ internal class ScriptClassFile : BaseClassFile
         string sqlParams,
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
-        string updateParams = ""
-        )
+        string updateParams = "")
     {
+        columns = DeduplicateColumnNames(columns);
+
         FileName = fileName;
         EntityName = entityName;
-        MethodName = methodName;
-        Columns = columns;
-        SqlContent = sqlContent.Trim();
-        MethodParams = methodParams;
-        SqlParams = Templates.Parameters(sqlParams);
-        updateParams = Templates.Parameters(updateParams);
-        
+        Content = GetContent(
+            entityName,
+            methodName,
+            columns,
+            sqlContent,
+            methodParams,
+            sqlParams,
+            objectType,
+            ScriptType,
+            updateParams
+            );
+    }
 
+    private static string GetContent(
+        string entityName,
+        string methodName,
+        List<Column> columns,
+        string sqlContent,
+        string methodParams,
+        string sqlParams,
+        ObjectReturnTypes objectType,
+        State.SqlFile.ObjectTypes ScriptType,
+        string updateParams)
+    {
+        bool isMethodType =
+            ScriptType == State.SqlFile.ObjectTypes.Query ||
+            ScriptType == State.SqlFile.ObjectTypes.StoredProcedure;
 
-        bool isQuery = Columns?.Count > 0;
-        bool isScalar = columns.Count() == 1;
-        columns = DeduplicateColumnNames(columns);
-        string scalarTypeName = isScalar 
-            ? columns.First().FullDataType 
-            : "";
+        bool isTableType =
+            ScriptType == State.SqlFile.ObjectTypes.Table;
 
-        string typeStaticClassName = objectType == ObjectReturnTypes.QueryNoResult || objectType == ObjectReturnTypes.QueryScalarResult || objectType == ObjectReturnTypes.QueryResult
+        bool isQueryType =
+            objectType == ObjectReturnTypes.QueryNoResult ||
+            objectType == ObjectReturnTypes.QueryScalarResult ||
+            objectType == ObjectReturnTypes.QueryResult;
+
+        string typeStaticClassName = isQueryType
             ? "SqlQueryStrings"
             : "DatabaseUpdateStrings";
 
-        string queryAssignment = GetAssignment(objectType, EntityName, MethodName, Columns, typeStaticClassName);
-        string returnType = Templates.ReturnType(isQuery, isScalar, EntityName, scalarTypeName);
-        string staticClass = Templates.StaticClass(MethodName, SqlContent, typeStaticClassName);
-        string methodClass = ScriptType == State.SqlFile.ObjectTypes.Query || ScriptType == State.SqlFile.ObjectTypes.StoredProcedure
-            ? Templates.MethodClass(MethodName, MethodParams, SqlParams, returnType, queryAssignment)
+        bool isQuery = columns?.Count > 0;
+        bool isScalar = columns?.Count == 1;
+        string scalarTypeName = isScalar && columns != null
+            ? columns.First().FullDataType
             : "";
-        string crudClass = CrudClass(ScriptType, columns, MethodName, entityName, SqlParams, updateParams);
 
-        string entityTypeClass = isScalar
-            ? ""
-            : Templates.EntityTypeClass(EntityName, GetPropertyClassLines(Columns));
+        string returnType = GetReturnType(isQuery, isScalar, entityName, scalarTypeName);
 
-        Content = Templates.JoinClasses(staticClass, methodClass, crudClass, entityTypeClass);
-    }
+        string getParams = "";
+        string updateSet = "";
+        string insertColumns = "";
+        string insertParams = "";
 
-    private static string CrudClass(State.SqlFile.ObjectTypes ScriptType, List<Column> columns, string methodName, string EntityName, string sqlParams, string updateParams)
-    {
-        if (ScriptType != State.SqlFile.ObjectTypes.Table)
+        if (ScriptType == State.SqlFile.ObjectTypes.Table)
         {
-            return "";
-        }
-
-        string getParams = columns
+            getParams = columns
             .Where(i => i.IsIdentity)
             .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
             .Join(", ");
-        string getFilter = GetCrudGetFilter(columns);
-        string updateSet = columns
-            .Where(i => !i.IsIdentity)
-            .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
-            .Join(Environment.NewLine + "                    ,");
 
-        string insertColumns = columns
-            .Where(i => !i.IsIdentity)
-            .Select(i => i.ColumnName)
-            .Join(Environment.NewLine + "                    ,");
-        string insertParams = columns
-            .Where(i => !i.IsIdentity)
-            .Select(i => "@" + i.ColumnName)
-            .Join(Environment.NewLine + "                    ,");
+            updateSet = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
+                .Join(Environment.NewLine + "                    ,");
 
-        return Templates.CrudClass(methodName, getParams, getFilter, EntityName, propertySet: GetNewObject(columns), sqlParams, updateParams, updateSet, methodName, insertColumns, insertParams);
+            insertColumns = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => i.ColumnName)
+                .Join(Environment.NewLine + "                    ,");
+            insertParams = columns
+                .Where(i => !i.IsIdentity)
+                .Select(i => "@" + i.ColumnName)
+                .Join(Environment.NewLine + "                    ,");
+        }
+
+        TemplateModel model = new()
+        {
+            ObjectType = objectType,
+            ScriptType = ScriptType,
+            TypeStaticClassName = typeStaticClassName,
+            MethodName = methodName,
+            EntityName = entityName,
+            StaticSqlContent = sqlContent.Trim().Replace("\"", "\"\""),
+            IsQuery = isQuery,
+            IsScalar = isScalar,
+            IsMethodType = isMethodType,
+            IsTableType = isTableType,
+            ScalarTypeName = scalarTypeName,
+            ReturnType = returnType,
+            MethodParams = methodParams,
+            SqlParams = sqlParams,
+            GetParams = getParams,
+            UpdateSet = updateSet,
+            InsertColumns = insertColumns,
+            InsertParams = insertParams,
+            QueryParams = sqlParams,
+            UpdateParams = updateParams,
+            Columns = columns,
+        };
+
+        return Templates.ToString(model);
     }
 
-    private static string GetAssignment(ObjectReturnTypes objectType, string entityName, string methodName, List<Column> columns, string typeStaticClassName) => 
-        objectType switch
+    private static string GetReturnType(bool isQuery, bool isScalar, string entityName, string scalarTypeName)
+    {
+        if (!isQuery)
         {
-            ObjectReturnTypes.QueryNoResult => Templates.QueryNonAssignment(methodName, typeStaticClassName),
-            ObjectReturnTypes.QueryScalarResult => Templates.QueryScalarAssignment(methodName, propertySet: $"dr.{GetTypeRequest(columns.First().FullDataType)}(0)", typeStaticClassName),
-            ObjectReturnTypes.QueryResult => Templates.QueryAssignment(entityName, methodName, propertySet: GetNewObject(columns), typeStaticClassName),
-            ObjectReturnTypes.StoredProcedureNoResult => Templates.StoredProcedureNonAssignment(methodName),
-            ObjectReturnTypes.StoredProcedureScalarResult => Templates.StoredProcedureScalarAssignment(methodName, propertySet: $"dr.{GetTypeRequest(columns.First().FullDataType)}(0)"),
-            ObjectReturnTypes.StoredProcedureResult => Templates.StoredProcedureAssignment(entityName, methodName, propertySet: GetNewObject(columns)),
-            _ => ""
-        };
+            return "bool";
+        }
+
+        if (isScalar && scalarTypeName == "string?")
+        {
+            return "string";
+        }
+
+        if (isScalar && scalarTypeName == "byte[]?")
+        {
+            return "byte[]";
+        }
+
+        if (isScalar)
+        {
+            return scalarTypeName;
+        }
+
+        return $"List<{entityName}>";
+    }
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
         columns
@@ -116,65 +163,4 @@ internal class ScriptClassFile : BaseClassFile
 
         return column;
     }
-
-    private static string GetPropertyClassLines(List<Column> properties) =>
-        properties
-            .Select(i =>
-                Templates.PropertyString(
-                    DotNet.IsDotnetCoreProject() ? "required ": "",
-                    i.DataType,
-                    FilterOutUnstupportedNullableTypes(i.DataType, i.NullFlag),
-                    i.ColumnName,
-                    i.DefaultValue
-                )
-            )
-            .ToMultiLineString();
-
-    private static string FilterOutUnstupportedNullableTypes(string dataType, string nullFlag) =>
-        (!DotNet.IsDotnetCoreProject() && dataType == "string") || 
-        dataType == "byte[]" 
-            ? "" 
-            : nullFlag;
-
-
-    private static string GetNewObject(List<Column> properties) =>
-        properties
-            .Select(i =>
-                $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
-            )
-            .ToMultiLineString();
-
-    private static string GetCrudGetFilter(List<Column> columns) =>
-        columns.Count == 0
-            ? ""
-        : "WHERE " + columns
-            .Where(i => i.IsIdentity)
-            .Select(GetCrudGetFilterItem)
-            .Join(" AND ");
-
-    private static string GetCrudGetFilterItem(Column column) =>
-        $"{column.ColumnName} = ISNULL(@{column.ColumnName}, {column.ColumnName})";
-
-    private static string GetTypeRequest(string dataType) =>
-        dataType switch
-        {
-            "Int32" => "GetInt32",
-            "Int32?" => "GetNullableInt32",
-            "int" => "GetInt32",
-            "int?" => "GetNullableInt32",
-            "DateTime" => "GetDateTime",
-            "DateTime?" => "GetNullableDateTime",
-            "decimal" => "GetDecimal",
-            "decimal?" => "GetNullableDecimal",
-            "double" => "GetDouble",
-            "double?" => "GetNullableDouble",
-            "bool" => "GetBoolean",
-            "bool?" => "GetNullableBoolean",
-            "byte[]" => "GetByteArray",
-            "byte[]?" => "GetNullableByteArray",
-            "Guid" => "GetGuid",
-            "Guid?" => "GetNullableGuid",
-            "string?" => "GetNullableString",
-            _ => "GetString",
-        };
 }

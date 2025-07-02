@@ -1,8 +1,12 @@
-﻿namespace sqlM;
+﻿using sqlM.ResultClassTypes;
+using static sqlM.ResultClassTypes.ScriptClassFile;
+
+namespace sqlM;
 
 internal static class Templates
 {
-    public static string JoinClasses(string staticClass, string methodClass, string crudMethods, string entityClass) =>
+
+    public static string ToString(TemplateModel model) =>
         $@"
 // ##########################################################################################
 // #                                                                                        #
@@ -21,67 +25,71 @@ using System.Collections.Generic;
 
 namespace sqlM
 {{
-    {staticClass}{methodClass}{crudMethods}{entityClass}
+    {StaticClass(model)}{MethodClass(model)}{CrudClass(model)}{EntityTypeClass(model)}
 }}"
             .Replace("\r\n", "\n");
 
-        public static string StaticClass(string methodName, string content, string scriptTypeClassName) =>
-            $@"
-    public static partial class {scriptTypeClassName}
+    private static string StaticClass(TemplateModel model) =>
+        $@"
+    public static partial class {model.TypeStaticClassName}
     {{
-        public const string {methodName} = @""
-{content.Replace("\"", "\"\"")}"";
+        public const string {model.MethodName} = @""
+{model.StaticSqlContent}"";
     }}
     ";
 
-        public static string MethodClass(string methodName, string methodParams, string sqlParams, string returnType, string queryAssignment) =>
-            $@"
+    private static string MethodClass(TemplateModel model) =>
+        !model.IsMethodType
+            ? ""
+            : $@"
     public partial class Database
     {{
-        public {returnType} {methodName}({methodParams})
+        public {model.ReturnType} {model.MethodName}({model.MethodParams})
         {{
-            {sqlParams}
-            {queryAssignment};
+            {Parameters(model.SqlParams)}
+            {GetAssignment(model)};
         }}
     }}
 ";
 
-    public static string CrudClass(string methodName, string getParams, string getFilter, string entityName, string propertySet, string queryParams, string updateParams, string updateSet, string returnType, string insertColumns, string insertParams) =>
-        $@"
+    private static string CrudClass(TemplateModel model) =>
+        !model.IsTableType
+        ? ""
+        : $@"
     public partial class Database
     {{
-        public List<{entityName}> {methodName}_Get({getParams})
+        public List<{model.EntityName}> {model.MethodName}_Get({model.GetParams})
         {{
-            string script = @""SELECT * FROM {methodName} {getFilter}"";
+            string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
-            {queryParams}
+            {Parameters(model.SqlParams)}
             SqlDataReader dr = Generic_OpenReader(parameters, script);
-            List<{entityName}> output = new List<{entityName}>();
+            List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (dr.Read())
 		    {{
-			    output.Add(new {entityName}
+			    output.Add(new {model.EntityName}
 			    {{
-{propertySet}
+{ToPropertySet(model.Columns)}
 			    }});
 		    }}
 
 		    return output;
         }}
 
-        public int {methodName}_Set({returnType} item) =>
+        public int {model.MethodName}_Set({model.MethodName} item) =>
             item.ID > 0
-                ? {methodName}_Update(item)
-                : {methodName}_Add(item);
+                ? {model.MethodName}_Update(item)
+                : {model.MethodName}_Add(item);
 
 
-        public int {methodName}_Update({returnType} item)
+        public int {model.MethodName}_Update({model.MethodName} item)
         {{
-            {updateParams}
+            {Parameters(model.UpdateParams)}
             string script = @""
-                UPDATE {methodName} 
+                UPDATE {model.MethodName} 
                 SET
-                     {updateSet}
-                {getFilter}
+                     {model.UpdateSet}
+                {GetCrudWhereFilter(model.Columns)}
 
                 SELECT CAST(SCOPE_IDENTITY() AS int) "";
 
@@ -91,15 +99,15 @@ namespace sqlM
                 : (int)result;
         }}
 
-        public int {methodName}_Add({returnType} item)
+        public int {model.MethodName}_Add({model.MethodName} item)
         {{
-            {updateParams}
+            {Parameters(model.UpdateParams)}
             string script = @""
-                INSERT INTO {methodName} (
-                    {insertColumns}
+                INSERT INTO {model.MethodName} (
+                    {model.InsertColumns}
                 )
                 VALUES (
-                    {insertParams}
+                    {model.InsertParams}
                 )
 
                 SELECT CAST(SCOPE_IDENTITY() AS int) 
@@ -111,52 +119,38 @@ namespace sqlM
                 : (int)result;
         }}
 
-        public bool {methodName}_Del({getParams})
+        public bool {model.MethodName}_Del({model.GetParams})
         {{
-            string script = @""DELETE {methodName} {getFilter}"";
-            {queryParams}
+            string script = @""DELETE {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
+            {Parameters(model.SqlParams)}
             Generic_ExecuteNonQuery(parameters, script);
             return true;
         }}
     }}
 ";
 
-    public static string ReturnType(bool isQuery, bool isScalar, string entityName, string scalarTypeName)
-    {
-        if (!isQuery)
-        {
-            return "bool";
-        }
+    private static string GetCrudWhereFilter(List<Column> columns) =>
+        columns.Count == 0
+            ? ""
+        : "WHERE " + columns
+            .Where(i => i.IsIdentity)
+            .Select(GetCrudGetFilterItem)
+            .Join(" AND ");
 
-        if (isScalar && scalarTypeName == "string?")
-        {
-            return "string";
-        }
+    private static string GetCrudGetFilterItem(Column column) =>
+        $"{column.ColumnName} = ISNULL(@{column.ColumnName}, {column.ColumnName})";
 
-        if (isScalar && scalarTypeName == "byte[]?")
-        {
-            return "byte[]";
-        }
-
-        if (isScalar)
-        {
-            return scalarTypeName;
-        }
-
-        return $"List<{entityName}>";
-    }
-
-    public static string EntityTypeClass(string entityName, string properties) =>
-        string.IsNullOrWhiteSpace(properties)
-            ? string.Empty
-        : $@"
-    public partial class {entityName} 
+    private static string EntityTypeClass(TemplateModel model) =>
+        model.Columns.Count == 0 || model.IsScalar
+            ? ""
+            : $@"
+    public partial class {model.EntityName} 
     {{
-{properties}
+{GetPropertyClassLines(model.Columns)}
     }}
 ";
 
-    public static string Parameters(string sqlParams) =>
+    private static string Parameters(string sqlParams) =>
         string.IsNullOrWhiteSpace(sqlParams)
             ? "SqlParameter[] parameters = new SqlParameter[0];"
             : $@"SqlParameter[] parameters = new SqlParameter[]
@@ -164,54 +158,111 @@ namespace sqlM
             }};
 ";
 
-    public static string PropertyString(string requiredFlag, string dataType, string nullFlag, string columnName, string defaultValue) =>
+    private static string GetPropertyClassLines(List<Column> properties) =>
+        properties
+            .Select(i =>
+                PropertyString(
+                    DotNet.IsDotnetCoreProject() ? "required " : "",
+                    i.DataType,
+                    FilterOutUnstupportedNullableTypes(i.DataType, i.NullFlag),
+                    i.ColumnName,
+                    i.DefaultValue
+                )
+            )
+            .ToMultiLineString();
+
+    private static string FilterOutUnstupportedNullableTypes(string dataType, string nullFlag) =>
+        (!DotNet.IsDotnetCoreProject() && dataType == "string") ||
+        dataType == "byte[]"
+            ? ""
+            : nullFlag;
+
+    private static string PropertyString(string requiredFlag, string dataType, string nullFlag, string columnName, string defaultValue) =>
         $"\t\tpublic {requiredFlag}{dataType}{nullFlag} {columnName} {{ get; set; }}{defaultValue}";
 
+    private static string GetAssignment(TemplateModel model) =>
+        model.ObjectType switch
+        {
+            ObjectReturnTypes.QueryNoResult => QueryNonAssignment(model),
+            ObjectReturnTypes.QueryScalarResult => QueryScalarAssignment(model),
+            ObjectReturnTypes.QueryResult => QueryAssignment(model),
+            ObjectReturnTypes.StoredProcedureNoResult => StoredProcedureNonAssignment(model),
+            ObjectReturnTypes.StoredProcedureScalarResult => StoredProcedureScalarAssignment(model),
+            ObjectReturnTypes.StoredProcedureResult => StoredProcedureAssignment(model),
+            _ => ""
+        };
 
-    public static string PropertySet(string dataType, string nullFlag, string columnName) =>
-        $"{columnName} = ";
+    private static string QueryNonAssignment(TemplateModel model) =>
+        @$"return Generic_ExecuteNonQuery(parameters, {model.TypeStaticClassName}.{model.MethodName}) != 0";
 
-    public static string QueryAssignment(string entityName, string methodName, string propertySet, string scriptTypeClassName) =>
-        @$"SqlDataReader dr = Generic_OpenReader(parameters, {scriptTypeClassName}.{methodName});
-		    List<{entityName}> output = new List<{entityName}>();
+    private static string QueryScalarAssignment(TemplateModel model) =>
+        @$"SqlDataReader dr = Generic_OpenReader(parameters, {model.TypeStaticClassName}.{model.MethodName});
+		    dr.Read();
+		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
+		";
+
+    private static string QueryAssignment(TemplateModel model) =>
+        @$"SqlDataReader dr = Generic_OpenReader(parameters, {model.TypeStaticClassName}.{model.MethodName});
+		    List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (dr.Read())
 		    {{
-			    output.Add(new {entityName}
+			    output.Add(new {model.EntityName}
 			    {{
-{propertySet}
+{ToPropertySet(model.Columns)}
 			    }});
 		    }}
 
 		return output";
 
-    public static string QueryScalarAssignment(string methodName, string propertySet, string scriptTypeClassName) =>
-        @$"SqlDataReader dr = Generic_OpenReader(parameters, {scriptTypeClassName}.{methodName});
+    private static string StoredProcedureNonAssignment(TemplateModel model) =>
+        @$"return Generic_StoredProcedureNonQuery(parameters, ""{model.MethodName}"") != 0";
+
+    private static string StoredProcedureScalarAssignment(TemplateModel model) =>
+        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{model.MethodName}"");
 		    dr.Read();
-		    return {propertySet};
+		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
 		";
 
-    public static string QueryNonAssignment(string methodName, string scriptTypeClassName) =>
-        @$"return Generic_ExecuteNonQuery(parameters, {scriptTypeClassName}.{methodName}) != 0";
-
-    public static string StoredProcedureAssignment(string entityName, string methodName, string propertySet) =>
-        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{methodName}"");
-		    List<{entityName}> output = new List<{entityName}>();
+    private static string StoredProcedureAssignment(TemplateModel model) =>
+        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{model.MethodName}"");
+		    List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (dr.Read())
 		    {{
-			    output.Add(new {entityName}
+			    output.Add(new {model.EntityName}
 			    {{
-{propertySet}
+{ToPropertySet(model.Columns)}
 			    }});
 		    }}
 
 		    return output";
 
-    public static string StoredProcedureScalarAssignment(string methodName, string propertySet) =>
-        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{methodName}"");
-		    dr.Read();
-		    return {propertySet};
-		";
+    private static string ToPropertySet(List<Column> columns) =>
+        columns
+            .Select(i =>
+                $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
+            )
+            .ToMultiLineString();
 
-    public static string StoredProcedureNonAssignment(string methodName) =>
-        @$"return Generic_StoredProcedureNonQuery(parameters, ""{methodName}"") != 0";
+    private static string GetTypeRequest(string dataType) =>
+       dataType switch
+       {
+           "Int32" => "GetInt32",
+           "Int32?" => "GetNullableInt32",
+           "int" => "GetInt32",
+           "int?" => "GetNullableInt32",
+           "DateTime" => "GetDateTime",
+           "DateTime?" => "GetNullableDateTime",
+           "decimal" => "GetDecimal",
+           "decimal?" => "GetNullableDecimal",
+           "double" => "GetDouble",
+           "double?" => "GetNullableDouble",
+           "bool" => "GetBoolean",
+           "bool?" => "GetNullableBoolean",
+           "byte[]" => "GetByteArray",
+           "byte[]?" => "GetNullableByteArray",
+           "Guid" => "GetGuid",
+           "Guid?" => "GetNullableGuid",
+           "string?" => "GetNullableString",
+           _ => "GetString",
+       };
 }
