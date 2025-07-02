@@ -15,6 +15,14 @@ public class Scaffold : IAction
                 try
                 {
                     files = FileHandler.GetFiles(state);
+                    if (files.FileCount == 0)
+                    {
+                        errorMessage = 
+                            $"I couldn't find any .sql files in {state.SourceDirectory} maybe add a few script files and retry scaffolding.\n" +
+                            $"You can create a script from a template by calling sqlM selecting \"Add\" and then the script type you would like to add.";
+                        return;
+                    }
+
                     ProgressTask parseSqlTask = ctx.AddTask("[green]Parsing SQL files[/]", maxValue: files.FileCount);
                     state.SqlFiles = FileHandler.GetSqlFiles(files, parseSqlTask);
 
