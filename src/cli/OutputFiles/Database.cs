@@ -21,7 +21,7 @@ namespace sqlM
     {
         private string _connectionString;
         public event EventHandler<UpdateScript>? RunningScript;
-        public event EventHandler<UpdateScript>? ScriptError;
+        public event EventHandler<UpdateError>? ScriptError;
 
         public Database(string connectionString)
         {
@@ -144,9 +144,16 @@ namespace sqlM
 
                         cmd.ExecuteNonQuery();
                     }
-                    catch (SqlException)
+                    catch (SqlException ex)
                     {
-                        ScriptError?.Invoke(this, script);
+                        UpdateError error = new()
+                        {
+                            Name = script.Name,
+                            Content = script.Content,
+                            Error = ex,
+                        };
+
+                        ScriptError?.Invoke(this, error);
                         if (ScriptError == null)
                         {
                             throw;
@@ -197,12 +204,12 @@ namespace sqlM
 
     public class UpdateScript : EventArgs
     {
-        public string Name { get; set; }
-        public string Content { get; set; }
-        public UpdateScript(string name, string content)
-        {
-            Name = name;
-            Content = content;
-        }
+        public required string Name { get; set; }
+        public required string Content { get; set; }
+    }
+
+    public class UpdateError : UpdateScript
+    {
+        public required SqlException Error { get; set; }
     }
 }
