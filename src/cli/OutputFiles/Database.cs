@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 
 namespace sqlM
 {
-    public partial class Database
+    public partial class Database : IDatabase
     {
         private string _connectionString;
         public event EventHandler<UpdateScript>? RunningScript;
@@ -178,6 +178,13 @@ namespace sqlM
 
         public static SqlParameter ToSqlParameter(string name, object? value) =>
             new SqlParameter(name, value ?? DBNull.Value);
+    }
+
+    public interface IDatabase
+    {
+        public string GetConnectionString();
+        public bool Update();
+// Interface fields go here
     }
 
     public static class TypeExtensions

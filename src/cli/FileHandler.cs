@@ -95,13 +95,15 @@ internal class FileHandler
 
     public static BaseClassFile[] GenerateClassFiles(Container state, ProgressTask taskProgress)
     {
-        List<BaseClassFile> classFiles = new() { GetBaseClassFile(state) };
+        List<BaseClassFile> classFiles = [];
 
-        foreach (var sqlFile in state.SqlFiles)
+        foreach (SqlFile sqlFile in state.SqlFiles)
         {
             classFiles.Add(Converters.SqlFile.GenerateClassFile(state, sqlFile));
             taskProgress.Increment(1);
         }
+
+        classFiles.Add(GetBaseClassFile(state, classFiles));
 
         return classFiles.ToArray();
     }
@@ -156,7 +158,7 @@ internal class FileHandler
         }
     }
 
-    private static BaseClassFile GetBaseClassFile(Container state)
+    private static BaseClassFile GetBaseClassFile(Container state, List<BaseClassFile> classFiles)
     {
         BaseClassFile dbFile = GetEmbeddedFile("Database.cs", "Database.cs");
 
@@ -172,6 +174,15 @@ internal class FileHandler
             $"UpdateScript[] updateScripts = Array.Empty<UpdateScript>(); // Database update scripts go here", 
             $"UpdateScript[] updateScripts = new UpdateScript[] {{ \n{updateScripts} \t\t}};"
             );
+
+        string interfaceFields = classFiles
+            .Select(i => i.MethodSigniture ?? "")
+            .Join("\n");
+
+        dbFile.Content = dbFile.Content.Replace(
+                    "// Interface fields go here",
+                    interfaceFields
+                );
 
         if (!DotNet.IsDotnetCoreProject())
         {

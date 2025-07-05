@@ -31,6 +31,12 @@ internal class ScriptClassFile : BaseClassFile
             ScriptType,
             updateParams
             );
+        MethodSigniture = GetMethodSigniture(
+            entityName,
+            methodName,
+            columns,
+            methodParams
+            );
     }
 
     private static string GetContent(
@@ -146,6 +152,23 @@ internal class ScriptClassFile : BaseClassFile
         }
 
         return $"List<{entityName}>";
+    }
+
+
+    private static string GetMethodSigniture(
+        string entityName,
+        string methodName,
+        List<Column> columns,
+        string methodParams)
+    {
+        bool isQuery = columns?.Count > 0;
+        bool isScalar = columns?.Count == 1;
+        string scalarTypeName = isScalar && columns != null
+            ? columns.First().FullDataType
+            : "";
+
+        string returnType = GetReturnType(isQuery, isScalar, entityName, scalarTypeName);
+        return @$"        public {returnType} {methodName}({methodParams});";
     }
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
