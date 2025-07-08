@@ -213,10 +213,17 @@ namespace sqlM
     {
         public required string Name { get; set; }
         public required string Content { get; set; }
+        public UpdateScript(string name, string content)
+        {
+            Name = name;
+            Content = content;
+        }
     }
 
-    public class UpdateError : UpdateScript
+    public class UpdateError
     {
+        public required string Name { get; set; }
+        public required string Content { get; set; }
         public required SqlException Error { get; set; }
     }
 }
