@@ -211,8 +211,8 @@ namespace sqlM
 
     public class UpdateScript : EventArgs
     {
-        public required string Name { get; set; }
-        public required string Content { get; set; }
+        public string Name { get; set; }
+        public string Content { get; set; }
         public UpdateScript(string name, string content)
         {
             Name = name;
@@ -222,8 +222,8 @@ namespace sqlM
 
     public class UpdateError
     {
-        public required string Name { get; set; }
-        public required string Content { get; set; }
-        public required SqlException Error { get; set; }
+        public string Name { get; set; }
+        public string Content { get; set; }
+        public SqlException Error { get; set; }
     }
 }

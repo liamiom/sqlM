@@ -32,6 +32,7 @@ internal class ScriptClassFile : BaseClassFile
             updateParams
             );
         MethodSigniture = GetMethodSigniture(
+            ScriptType,
             entityName,
             methodName,
             columns,
@@ -154,8 +155,8 @@ internal class ScriptClassFile : BaseClassFile
         return $"List<{entityName}>";
     }
 
-
     private static string GetMethodSigniture(
+        State.SqlFile.ObjectTypes ScriptType,
         string entityName,
         string methodName,
         List<Column> columns,
@@ -167,9 +168,26 @@ internal class ScriptClassFile : BaseClassFile
             ? columns.First().FullDataType
             : "";
 
+        string getParams = columns
+            .Where(i => i.IsIdentity)
+            .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
+            .Join(", ");
+
         string returnType = GetReturnType(isQuery, isScalar, entityName, scalarTypeName);
-        return @$"        public {returnType} {methodName}({methodParams});";
+
+        return ScriptType == State.SqlFile.ObjectTypes.Table
+            ? GetCRUDMethodSigniture(returnType, methodName, getParams)
+            : GetSingleMethodSigniture(returnType, methodName, methodParams);
     }
+
+    private static string GetSingleMethodSigniture(string returnType, string methodName, string methodParams) =>
+        @$"        public {returnType} {methodName}({methodParams});";
+
+    private static string GetCRUDMethodSigniture(string returnType, string methodName, string getParams) =>
+        $"        public {returnType} {methodName}_Get({getParams});\n" +
+        $"        public int {methodName}_Set({methodName} item);\n" +
+        $"        public int {methodName}_Update({methodName} item);\n" +
+        $"        public int {methodName}_Add({methodName} item);";
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
         columns
