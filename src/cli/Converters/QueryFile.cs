@@ -174,8 +174,31 @@ internal class QueryFile
         }
     }
 
-    private static object GetDefaultValue(Type type) =>
-        type.IsValueType
+    private static object GetDefaultValue(Type type)
+    {
+        if (type == typeof(string))
+        {
+            return "";
+        }
+        else if (type == typeof(DateTime))
+        {
+            return DateTime.Now;
+        }
+        else if (type == typeof(DateOnly))
+        {
+            return DateTime.Today;
+        }
+        else if (type == typeof(TimeOnly))
+        {
+            return DateTime.Now;
+        }
+        else if (type == typeof(MemoryStream))
+        {
+            return new MemoryStream();
+        }
+
+        return type.IsValueType
             ? Activator.CreateInstance(type) ?? DBNull.Value
             : DBNull.Value;
+    }
 }
