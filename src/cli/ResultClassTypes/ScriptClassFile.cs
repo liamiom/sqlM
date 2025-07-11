@@ -187,7 +187,8 @@ internal class ScriptClassFile : BaseClassFile
         $"        public {returnType} {methodName}_Get({getParams});\n" +
         $"        public int {methodName}_Set({methodName} item);\n" +
         $"        public int {methodName}_Update({methodName} item);\n" +
-        $"        public int {methodName}_Add({methodName} item);";
+        $"        public int {methodName}_Add({methodName} item);\n" +
+        $"        public bool {methodName}_Del({getParams});";
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
         columns
