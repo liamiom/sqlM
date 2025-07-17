@@ -77,7 +77,7 @@ namespace sqlM
         }}
 
         public int {model.MethodName}_Set({model.MethodName} item) =>
-            item.ID > 0
+            {GetCrudUpdateCheck(model.Columns)}
                 ? {model.MethodName}_Update(item)
                 : {model.MethodName}_Add(item);
 
@@ -129,13 +129,21 @@ namespace sqlM
     }}
 ";
 
+    private static string GetCrudUpdateCheck(List<Column> columns) =>
+        columns.Count == 0
+            ? "false"
+            : columns
+                .Where(i => i.IsIdentity && i.DataType == "int")
+                .Select(i => $"item.{i.ColumnName} > 0")
+                .Join(" && ");
+
     private static string GetCrudWhereFilter(List<Column> columns) =>
         columns.Count == 0
             ? ""
-        : "WHERE " + columns
-            .Where(i => i.IsIdentity)
-            .Select(GetCrudGetFilterItem)
-            .Join(" AND ");
+            : "WHERE " + columns
+                .Where(i => i.IsIdentity)
+                .Select(GetCrudGetFilterItem)
+                .Join(" AND ");
 
     private static string GetCrudGetFilterItem(Column column) =>
         $"{column.ColumnName} = ISNULL(@{column.ColumnName}, {column.ColumnName})";
