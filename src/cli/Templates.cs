@@ -133,9 +133,17 @@ namespace sqlM
         columns.Count == 0
             ? "false"
             : columns
-                .Where(i => i.IsIdentity && i.DataType == "int")
-                .Select(i => $"item.{i.ColumnName} > 0")
+                .Where(i => i.IsIdentity)
+                .Select(i => GetHasValueCheck(i.DataType, i.ColumnName))
+                .Where(i => !string.IsNullOrWhiteSpace(i))
                 .Join(" && ");
+
+    private static string GetHasValueCheck(string typeName, string columnName) =>
+        typeName switch
+        {
+            "int" => $"item.{columnName} > 0",
+            _ => $"!string.IsNullOrWhiteSpace(item.{columnName}.ToString())",
+        };
 
     private static string GetCrudWhereFilter(List<Column> columns) =>
         columns.Count == 0

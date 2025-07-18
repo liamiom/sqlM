@@ -4,6 +4,7 @@ using Spectre.Console;
 using System.Text.RegularExpressions;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using sqlM.Extensions;
 
 namespace sqlM.Converters;
 internal class TableFile
@@ -43,7 +44,8 @@ internal class TableFile
         string sqlParams = "";
 
         IEnumerable<DataRow> rows = GetRows(sqlFile, state.ConnectionString);
-        List<Column> columns = GetProperties(rows);
+        string[] keys = GetPrimaryKeys(sqlFile.Content);
+        List<Column> columns = GetProperties(rows, keys);
         sqlFile.Paramiters = columns
             .Where(i => i.IsIdentity)
             .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
@@ -82,18 +84,29 @@ internal class TableFile
         );
     }
 
+    private static string[] GetPrimaryKeys(string content)
+    {
+        string keyNameSection = content.RegexReplace(".*PRIMARY KEY[^\\(]*\\(([^\\)]*).*", "$1", RegexOptions.Singleline);
+        string keys = keyNameSection.RegexReplace(".*\\[(.+)\\].*", "$1 ");
+        return keys
+            .Split(' ')
+            .Where(i => !string.IsNullOrWhiteSpace(i))
+            .Select(i => i.Trim())
+            .ToArray();
+    }
+
     private static IEnumerable<DataRow> GetRows(State.SqlFile sqlFile, string conString) =>
         GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
 
-    private static List<Column> GetProperties(IEnumerable<DataRow> rows) =>
+    private static List<Column> GetProperties(IEnumerable<DataRow> rows, string[] keys) =>
         rows
             .Select((row, index) => new Column
             {
                 DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? ""),
                 NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
-                ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
+                ColumnName = row["ColumnName"]?.ToString()?.Replace(" ", "_") ?? "",
                 DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
-                IsIdentity = (bool)row["IsIdentity"],
+                IsIdentity = (bool)row["IsIdentity"] || keys.Contains(row["ColumnName"]?.ToString()?.Replace(" ", "_")),
                 Index = index
             })
             .ToList();
