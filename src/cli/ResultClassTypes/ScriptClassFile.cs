@@ -83,12 +83,12 @@ internal class ScriptClassFile : BaseClassFile
         if (ScriptType == State.SqlFile.ObjectTypes.Table)
         {
             getParams = columns
-            .Where(i => i.IsIdentity)
+            .Where(i => i.IsKey)
             .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
             .Join(", ");
 
             updateSet = columns
-                .Where(i => !i.IsIdentity)
+                .Where(i => !i.IsKey)
                 .Select(i => $"{i.ColumnName} = @{i.ColumnName}")
                 .Join(Environment.NewLine + "                    ,");
 
@@ -96,6 +96,7 @@ internal class ScriptClassFile : BaseClassFile
                 .Where(i => !i.IsIdentity)
                 .Select(i => i.ColumnName)
                 .Join(Environment.NewLine + "                    ,");
+
             insertParams = columns
                 .Where(i => !i.IsIdentity)
                 .Select(i => "@" + i.ColumnName)
@@ -169,7 +170,7 @@ internal class ScriptClassFile : BaseClassFile
             : "";
 
         string getParams = columns
-            .Where(i => i.IsIdentity)
+            .Where(i => i.IsKey)
             .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
             .Join(", ");
 

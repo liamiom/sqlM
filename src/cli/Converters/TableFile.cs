@@ -47,7 +47,7 @@ internal class TableFile
         string[] keys = GetPrimaryKeys(sqlFile.Content);
         List<Column> columns = GetProperties(rows, keys);
         sqlFile.Paramiters = columns
-            .Where(i => i.IsIdentity)
+            .Where(i => i.IsKey)
             .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
             .ToList();
 
@@ -101,10 +101,11 @@ internal class TableFile
             .Select((row, index) => new Column
             {
                 DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? ""),
-                NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
+                NullFlag = ((bool)row["AllowDBNull"]) == true ? "?" : "",
                 ColumnName = row["ColumnName"]?.ToString()?.Replace(" ", "_") ?? "",
-                DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),
-                IsIdentity = (bool)row["IsIdentity"] || keys.Contains(row["ColumnName"]?.ToString()?.Replace(" ", "_")),
+                DefaultValue = ((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : "",
+                IsKey = keys.Contains(row["ColumnName"]?.ToString()?.Replace(" ", "_")),
+                IsIdentity = (bool)row["IsIdentity"],
                 Index = index
             })
             .ToList();

@@ -8,5 +8,6 @@ internal struct Column
     public int Index;
     public string DefaultValue;
     public string FullDataType => $"{DataType}{NullFlag}";
+    public bool IsKey;
     public bool IsIdentity;
 }

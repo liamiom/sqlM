@@ -133,7 +133,7 @@ namespace sqlM
         columns.Count == 0
             ? "false"
             : columns
-                .Where(i => i.IsIdentity)
+                .Where(i => i.IsKey)
                 .Select(i => GetHasValueCheck(i.DataType, i.ColumnName))
                 .Where(i => !string.IsNullOrWhiteSpace(i))
                 .Join(" && ");
@@ -149,7 +149,7 @@ namespace sqlM
         columns.Count == 0
             ? ""
             : "WHERE " + columns
-                .Where(i => i.IsIdentity)
+                .Where(i => i.IsKey)
                 .Select(GetCrudGetFilterItem)
                 .Join(" AND ");
 
