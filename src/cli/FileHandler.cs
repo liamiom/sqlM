@@ -288,9 +288,12 @@ internal class FileHandler
             SqlFile.ObjectTypes.Function,
             SqlFile.ObjectTypes.StoredProcedure,
         };
-        var updatableSqlFiles = state.SqlFiles.Where(i => updatableTypes.Contains(i.ScriptType));
+        
+        var updateScripts = OrderByDependencies(state.SqlFiles)
+            .Where(i => updatableTypes.Contains(i.ScriptType))
+            .OrderBy(i => i.SortOrder);
 
-        foreach (var sqlFile in updatableSqlFiles)
+        foreach (var sqlFile in updateScripts)
         {
             var (result, error) = RunUpdateScript(sqlFile, conn, transaction);
             if (!result)

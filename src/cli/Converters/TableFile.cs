@@ -84,16 +84,14 @@ internal class TableFile
         );
     }
 
-    private static string[] GetPrimaryKeys(string content)
-    {
-        string keyNameSection = content.RegexReplace(".*PRIMARY KEY[^\\(]*\\(([^\\)]*).*", "$1", RegexOptions.Singleline);
-        string keys = keyNameSection.RegexReplace(".*\\[(.+)\\].*", "$1 ");
-        return keys
+    private static string[] GetPrimaryKeys(string content) => 
+        content
+            .RegexReplace(".*PRIMARY KEY[^\\(]*\\(([^\\)]*).*", "$1", RegexOptions.Singleline) // Trim down to the keys section 
+            .RegexReplace(".*\\[(.+)\\].*", "$1 ") // Split out the column names 
             .Split(' ')
             .Where(i => !string.IsNullOrWhiteSpace(i))
             .Select(i => i.Trim())
             .ToArray();
-    }
 
     private static IEnumerable<DataRow> GetRows(State.SqlFile sqlFile, string conString) =>
         GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
