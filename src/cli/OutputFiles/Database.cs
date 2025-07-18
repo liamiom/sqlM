@@ -174,7 +174,9 @@ namespace sqlM
         private static string[] SplitOnGo(string sql) => 
             Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
                 .Replace("GO", "¬")
-                .Split('¬');
+                .Split('¬')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
 
         public static SqlParameter ToSqlParameter(string name, object? value) =>
             new SqlParameter(name, value ?? DBNull.Value);
