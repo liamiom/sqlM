@@ -91,7 +91,8 @@ namespace sqlM
                      {model.UpdateSet}
                 {GetCrudWhereFilter(model.Columns)}
 
-                SELECT CAST(SCOPE_IDENTITY() AS int) "";
+                {GetCrudConfirmResult(model.Columns)} 
+                "";
 
             object result = Generic_OpenSingle(parameters, script);
             return result is DBNull
@@ -110,7 +111,7 @@ namespace sqlM
                     {model.InsertParams}
                 )
 
-                SELECT CAST(SCOPE_IDENTITY() AS int) 
+                {GetCrudConfirmResult(model.Columns)} 
                 "";
 
             object result = Generic_OpenSingle(parameters, script);
@@ -155,6 +156,11 @@ namespace sqlM
 
     private static string GetCrudGetFilterItem(Column column) =>
         $"{column.ColumnName} = ISNULL(@{column.ColumnName}, {column.ColumnName})";
+
+    private static string GetCrudConfirmResult(List<Column> columns) =>
+        columns.Any(i => i.IsIdentity)
+            ? "SELECT CAST(SCOPE_IDENTITY() AS int)"
+            : "SELECT CAST(1 AS int)";
 
     private static string EntityTypeClass(TemplateModel model) =>
         model.Columns.Count == 0 || model.IsScalar
