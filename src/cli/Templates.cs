@@ -184,7 +184,7 @@ namespace sqlM
         properties
             .Select(i =>
                 PropertyString(
-                    DotNet.IsDotnetCoreProject() ? "required " : "",
+                    "virtual ",
                     i.DataType,
                     FilterOutUnstupportedNullableTypes(i.DataType, i.NullFlag),
                     i.ColumnName,
