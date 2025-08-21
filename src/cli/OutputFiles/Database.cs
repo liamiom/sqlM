@@ -61,9 +61,35 @@ namespace sqlM
             return cmd.ExecuteReader();
         }
 
+        private async Task<SqlDataReader> Generic_OpenReaderAsync(SqlParameter[] parameters, string script)
+        {
+            SqlConnection conn = new SqlConnection(_connectionString);
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = script;
+            cmd.Connection = conn;
+
+            if (parameters.Length > 0)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+
+            conn.Open();
+            return await cmd.ExecuteReaderAsync();
+        }
+
         private object Generic_OpenSingle(SqlParameter[] parameters, string script)
         {
             SqlDataReader dr = Generic_OpenReader(parameters, script);
+            dr.Read();
+
+            return dr.FieldCount == 1
+                ? dr[0]
+                : null;
+        }
+
+        private async Task<object> Generic_OpenSingleAsync(SqlParameter[] parameters, string script)
+        {
+            SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
             dr.Read();
 
             return dr.FieldCount == 1
@@ -87,6 +113,22 @@ namespace sqlM
             return cmd.ExecuteNonQuery();
         }
 
+        private async Task<int> Generic_ExecuteNonQueryAsync(SqlParameter[] parameters, string script)
+        {
+            SqlConnection conn = new SqlConnection(_connectionString);
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = script;
+            cmd.Connection = conn;
+
+            if (parameters.Length > 0)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+
+            conn.Open();
+            return await cmd.ExecuteNonQueryAsync();
+        }
+
         private SqlDataReader Generic_StoredProcedureReader(SqlParameter[] parameters, string name)
         {
             SqlConnection conn = new SqlConnection(_connectionString);
@@ -104,6 +146,23 @@ namespace sqlM
             return cmd.ExecuteReader();
         }
 
+        private async Task<SqlDataReader> Generic_StoredProcedureReaderAsync(SqlParameter[] parameters, string name)
+        {
+            SqlConnection conn = new SqlConnection(_connectionString);
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = name;
+            cmd.Connection = conn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+            if (parameters.Length > 0)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+
+            conn.Open();
+            return await cmd.ExecuteReaderAsync();
+        }
+
         private int Generic_StoredProcedureNonQuery(SqlParameter[] parameters, string name)
         {
             SqlConnection conn = new SqlConnection(_connectionString);
@@ -119,6 +178,23 @@ namespace sqlM
 
             conn.Open();
             return cmd.ExecuteNonQuery();
+        }
+
+        private async Task<int> Generic_StoredProcedureNonQueryAsync(SqlParameter[] parameters, string name)
+        {
+            SqlConnection conn = new SqlConnection(_connectionString);
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = name;
+            cmd.Connection = conn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+            if (parameters.Length > 0)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+
+            conn.Open();
+            return await cmd.ExecuteNonQueryAsync();
         }
 
         public bool Update()

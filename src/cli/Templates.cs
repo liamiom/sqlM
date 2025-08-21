@@ -49,6 +49,12 @@ namespace sqlM
             {Parameters(model.SqlParams)}
             {GetAssignment(model)};
         }}
+
+        public async {AsyncReturnType(model.ReturnType)} {model.MethodName}Async({model.MethodParams})
+        {{
+            {Parameters(model.SqlParams)}
+            {GetAssignmentAsync(model)};
+        }}
     }}
 ";
 
@@ -76,11 +82,26 @@ namespace sqlM
 		    return output;
         }}
 
+        public async IAsyncEnumerable<{model.EntityName}> {model.MethodName}_GetAsync({model.GetParams})
+        {{
+            string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
+
+            {Parameters(model.SqlParams)}
+            SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
+		    while (dr.Read())
+		    {{
+                yield return 
+			    new {model.EntityName}
+			    {{
+{ToPropertySet(model.Columns)}
+			    }};
+		    }}
+        }}
+
         public int {model.MethodName}_Set({model.MethodName} item) =>
             {GetCrudUpdateCheck(model.Columns)}
                 ? {model.MethodName}_Update(item)
                 : {model.MethodName}_Add(item);
-
 
         public int {model.MethodName}_Update({model.MethodName} item)
         {{
@@ -120,11 +141,62 @@ namespace sqlM
                 : (int)result;
         }}
 
+        public async Task<int> {model.MethodName}_SetAsync({model.MethodName} item) =>
+            {GetCrudUpdateCheck(model.Columns)}
+                ? await {model.MethodName}_UpdateAsync(item)
+                : await {model.MethodName}_AddAsync(item);
+
+        public async Task<int> {model.MethodName}_UpdateAsync({model.MethodName} item)
+        {{
+            {Parameters(model.UpdateParams)}
+            string script = @""
+                UPDATE {model.MethodName} 
+                SET
+                     {model.UpdateSet}
+                {GetCrudWhereFilter(model.Columns)}
+
+                {GetCrudConfirmResult(model.Columns)} 
+                "";
+
+            object result = await Generic_OpenSingleAsync(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
+        }}
+
+        public async Task<int> {model.MethodName}_AddAsync({model.MethodName} item)
+        {{
+            {Parameters(model.UpdateParams)}
+            string script = @""
+                INSERT INTO {model.MethodName} (
+                    {model.InsertColumns}
+                )
+                VALUES (
+                    {model.InsertParams}
+                )
+
+                {GetCrudConfirmResult(model.Columns)} 
+                "";
+
+            object result = await Generic_OpenSingleAsync(parameters, script);
+            return result is DBNull
+                ? 0 
+                : (int)result;
+        }}
+
         public bool {model.MethodName}_Del({model.GetParams})
         {{
             string script = @""DELETE {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
             {Parameters(model.SqlParams)}
             Generic_ExecuteNonQuery(parameters, script);
+            return true;
+        }}
+
+        public async Task<bool> {model.MethodName}_DelAsync({model.GetParams})
+        {{
+            string script = @""DELETE {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
+            {Parameters(model.SqlParams)}
+            await Generic_ExecuteNonQueryAsync(parameters, script);
             return true;
         }}
     }}
@@ -234,7 +306,7 @@ namespace sqlM
 			    }});
 		    }}
 
-		return output";
+		    return output";
 
     private static string StoredProcedureNonAssignment(TemplateModel model) =>
         @$"return Generic_StoredProcedureNonQuery(parameters, ""{model.MethodName}"") != 0";
@@ -257,6 +329,62 @@ namespace sqlM
 		    }}
 
 		    return output";
+
+    private static string GetAssignmentAsync(TemplateModel model) =>
+        model.ObjectType switch
+        {
+            ObjectReturnTypes.QueryNoResult => QueryNonAssignmentAsync(model),
+            ObjectReturnTypes.QueryScalarResult => QueryScalarAssignmentAsync(model),
+            ObjectReturnTypes.QueryResult => QueryAssignmentAsync(model),
+            ObjectReturnTypes.StoredProcedureNoResult => StoredProcedureNonAssignmentAsync(model),
+            ObjectReturnTypes.StoredProcedureScalarResult => StoredProcedureScalarAssignmentAsync(model),
+            ObjectReturnTypes.StoredProcedureResult => StoredProcedureAssignmentAsync(model),
+            _ => ""
+        };
+
+    private static string QueryNonAssignmentAsync(TemplateModel model) =>
+        @$"return await Generic_ExecuteNonQueryAsync(parameters, {model.TypeStaticClassName}.{model.MethodName}) != 0";
+
+    private static string QueryScalarAssignmentAsync(TemplateModel model) =>
+        @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
+		    dr.Read();
+		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
+		";
+
+    private static string QueryAssignmentAsync(TemplateModel model) =>
+        @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
+		    while (dr.Read())
+		    {{
+                yield return 
+			    new {model.EntityName}
+			    {{
+{ToPropertySet(model.Columns)}
+			    }};
+		    }}";
+
+    private static string StoredProcedureNonAssignmentAsync(TemplateModel model) =>
+        @$"return await Generic_StoredProcedureNonQueryAsync(parameters, ""{model.MethodName}"") != 0";
+
+    private static string StoredProcedureScalarAssignmentAsync(TemplateModel model) =>
+        @$"SqlDataReader dr = await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"");
+		    dr.Read();
+		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
+		";
+
+    private static string StoredProcedureAssignmentAsync(TemplateModel model) =>
+        @$"SqlDataReader dr = await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"");
+		    List<{model.EntityName}> output = new List<{model.EntityName}>();
+		    while (dr.Read())
+		    {{
+                yield return 
+			    new {model.EntityName}
+			    {{
+{ToPropertySet(model.Columns)}
+			    }};
+		    }}";
+
+    private static string AsyncReturnType(string returnType) =>
+        returnType.Replace("List<", "IAsyncEnumerable<");
 
     private static string ToPropertySet(List<Column> columns) =>
         columns
