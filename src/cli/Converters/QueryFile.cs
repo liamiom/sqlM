@@ -149,7 +149,7 @@ internal class QueryFile
 
             conn.Open();
             SqlTransaction transaction = conn.BeginTransaction();
-            SqlCommand cmd = new(script.Content, conn, transaction);
+            SqlCommand cmd = new(script.ContentNoTableConstraints, conn, transaction);
 
             foreach (KeyValuePair<string, Type> param in script.Paramiters)
             {

@@ -109,7 +109,7 @@ internal class StoredProcedureFile
             SqlTransaction transaction = conn.BeginTransaction();
 
             // Add the stored procedure and its dependencies to the database
-            string[] sqlSections = SplitOnGo(script.Content);
+            string[] sqlSections = SplitOnGo(script.ContentNoTableConstraints);
             foreach (string sql in sqlSections)
             {
                 SqlCommand createCmd = new(sql, conn, transaction);
