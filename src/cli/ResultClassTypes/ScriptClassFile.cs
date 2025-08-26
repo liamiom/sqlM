@@ -183,19 +183,22 @@ internal class ScriptClassFile : BaseClassFile
 
     private static string GetSingleMethodSigniture(string returnType, string methodName, string methodParams) =>
         $"        public {returnType} {methodName}({methodParams});\n" +
-        $"        public {returnType} {methodName}Async({methodParams});";
+        $"        public {AsyncReturnType(returnType)} {methodName}Async({methodParams});";
 
     private static string GetCRUDMethodSigniture(string returnType, string methodName, string getParams) =>
         $"        public {returnType} {methodName}_Get({getParams});\n" +
-        $"        public {returnType} {methodName}_GetAsync({getParams});\n" +
+        $"        public {AsyncReturnType(returnType)} {methodName}_GetAsync({getParams});\n" +
         $"        public int {methodName}_Set({methodName} item);\n" +
-        $"        public int {methodName}_SetAsync({methodName} item);\n" +
+        $"        public Task<int> {methodName}_SetAsync({methodName} item);\n" +
         $"        public int {methodName}_Update({methodName} item);\n" +
-        $"        public int {methodName}_UpdateAsync({methodName} item);\n" +
+        $"        public Task<int> {methodName}_UpdateAsync({methodName} item);\n" +
         $"        public int {methodName}_Add({methodName} item);\n" +
-        $"        public int {methodName}_AddAsync({methodName} item);\n" +
+        $"        public Task<int> {methodName}_AddAsync({methodName} item);\n" +
         $"        public bool {methodName}_Del({getParams});\n" +
-        $"        public bool {methodName}_DelAsync({getParams});";
+        $"        public Task<bool> {methodName}_DelAsync({getParams});";
+
+    private static string AsyncReturnType(string returnType) =>
+        returnType.Replace("List<", "IAsyncEnumerable<");
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
         columns
