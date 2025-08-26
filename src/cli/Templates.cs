@@ -384,7 +384,9 @@ namespace sqlM
 		    }}";
 
     private static string AsyncReturnType(string returnType) =>
-        returnType.Replace("List<", "IAsyncEnumerable<");
+        returnType.Contains("List<")
+            ? returnType.Replace("List<", "IAsyncEnumerable<")
+            : $"Task<{returnType}>";
 
     private static string ToPropertySet(List<Column> columns) =>
         columns

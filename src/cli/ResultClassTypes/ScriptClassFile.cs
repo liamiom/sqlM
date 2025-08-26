@@ -198,7 +198,9 @@ internal class ScriptClassFile : BaseClassFile
         $"        public Task<bool> {methodName}_DelAsync({getParams});";
 
     private static string AsyncReturnType(string returnType) =>
-        returnType.Replace("List<", "IAsyncEnumerable<");
+        returnType.Contains("List<")
+            ? returnType.Replace("List<", "IAsyncEnumerable<")
+            : $"Task<{returnType}>";
 
     private static List<Column> DeduplicateColumnNames(List<Column> columns) => 
         columns
