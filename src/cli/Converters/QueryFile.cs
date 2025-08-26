@@ -94,12 +94,12 @@ internal class QueryFile
         {
             methodParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n        {SqlFile.CleanTypeName(i.Value.FullName) ?? ""} {i.Key}")
+                .Select(i => $"\n        {SqlFile.CleanTypeName(i.Value.FullName) ?? ""}? {i.Key}")
                 .Aggregate((a, b) => $"{a},{b}");
 
             sqlParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n            new SqlParameter(\"{i.Key}\", {i.Key}),")
+                .Select(i => $"\n            new SqlParameter(\"{i.Key}\", {i.Key} is null ? DBNull.Value : {i.Key} ),")
                 .Aggregate((a, b) => $"{a}{b}");
         }
 
