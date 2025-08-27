@@ -97,7 +97,7 @@ internal class FileHandler
     {
         List<BaseClassFile> classFiles = [];
 
-        foreach (SqlFile sqlFile in state.SqlFiles)
+        foreach (SqlFile sqlFile in state.SqlFiles.OrderBy(i => (int)i.ScriptType))
         {
             classFiles.Add(Converters.SqlFile.GenerateClassFile(state, sqlFile));
             taskProgress.Increment(1);
@@ -106,32 +106,6 @@ internal class FileHandler
         classFiles.Add(GetBaseClassFile(state, classFiles));
 
         return classFiles.ToArray();
-    }
-
-    public static bool CheckForDuplicates(BaseClassFile[] classFiles, out string name, out string firstFileName, out string lastFileName)
-    {
-        // Check for duplicate names
-        var duplicateNameList = classFiles
-            .GroupBy(i => i.EntityName)
-            .Where(i => i.Count() > 1)
-            .ToList();
-
-
-        if (duplicateNameList.Any())
-        {
-            var firstDuplicate = duplicateNameList.First();
-            name = firstDuplicate.Key.AnsiSafe();
-            firstFileName = firstDuplicate.First().FileName.AnsiSafe();
-            lastFileName = firstDuplicate.Last().FileName.AnsiSafe();
-        }
-        else
-        {
-            name = "";
-            firstFileName = "";
-            lastFileName = "";
-        }
-
-        return duplicateNameList.Any();
     }
 
     public static bool SaveClassFiles(Container state, BaseClassFile[] classFiles, ProgressTask taskProgress)
@@ -232,7 +206,7 @@ internal class FileHandler
 
     private static SqlFile[] OrderByDependencies(SqlFile[] sqlFiles)
     {
-        SqlFile[] filesToSort = sqlFiles.Where(i => i.SortOrder == 0).ToArray();
+        SqlFile[] filesToSort = sqlFiles.Where(i => i.SortOrder == 0).OrderBy(i => (int)i.ScriptType).ToArray();
         int sortCount = 1;
 
         while (filesToSort.Any())

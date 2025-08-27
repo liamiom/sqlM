@@ -51,6 +51,14 @@ internal class TableFile
             .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
             .ToList();
 
+
+        ResultTypeAbstract tableAbstract = new()
+        {
+            Name = sqlFile.EntityName,
+            Columns = columns,
+        };
+        state.EntityTypeCache.Add(tableAbstract);
+
         if (sqlFile.Paramiters != null && sqlFile.Paramiters?.Count > 0)
         {
             methodParams =

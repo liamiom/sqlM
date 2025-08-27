@@ -41,9 +41,10 @@ public class Scaffold : IAction
 
                     ProgressTask generateClassesTask = ctx.AddTask("[green]Generating class files[/]", maxValue: state.SqlFiles.Length);
                     BaseClassFile[] classFiles = FileHandler.GenerateClassFiles(state, generateClassesTask);
-                    if (FileHandler.CheckForDuplicates(classFiles, out string name, out string firstFileName, out string lastFileName))
+                    BaseClassFile? errorItem = classFiles.Where(i => !string.IsNullOrWhiteSpace(i.ErrorMessage)).FirstOrDefault();
+                    if (errorItem != null)
                     {
-                        errorMessage = $"\n[red]The type name \"{name}\" is duplicated in {firstFileName} and {lastFileName}[/]";
+                        errorMessage = $"\n[red]Error running \"{errorItem.FileName}\"[/]\n\n{errorItem.ErrorMessage}\n";
                         return;
                     }
 

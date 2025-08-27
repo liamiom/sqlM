@@ -9,4 +9,5 @@ public class Container
     public SqlFile[] SqlFiles { get; set; } = Array.Empty<SqlFile>();
     public List<File> GeneratedEntitiesFiles { get; set; } = new List<File>();
     public List<File> GeneratedModelsFiles { get; set; } = new List<File>();
+    public List<ResultClassTypes.ResultTypeAbstract> EntityTypeCache { get; set; } = [];
 }

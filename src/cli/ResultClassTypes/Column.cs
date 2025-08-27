@@ -1,6 +1,6 @@
 ﻿namespace sqlM.ResultClassTypes;
 
-internal struct Column
+public struct Column
 {
     public string DataType;
     public string NullFlag;

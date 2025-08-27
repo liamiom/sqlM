@@ -6,4 +6,5 @@ internal class BaseClassFile
     public string Content { get; set; }
     public string EntityName { get; set; }
     public string? MethodSigniture { get; set; }
+    public string ErrorMessage { get; set; } = "";
 }

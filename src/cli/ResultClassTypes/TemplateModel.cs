@@ -11,6 +11,7 @@ internal class TemplateModel
     public required bool IsScalar;
     public required bool IsMethodType;
     public required bool IsTableType;
+    public required bool GenerateType;
     public required string ScalarTypeName;
     public required string ReturnType;
     public required string MethodParams;

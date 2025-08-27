@@ -113,6 +113,17 @@ internal class QueryFile
             _ => ScriptClassFile.ObjectReturnTypes.QueryResult
         };
 
+        string errorMessage = "";
+        bool externalType = state.EntityTypeCache.Any(i => i.Name == sqlFile.EntityName);
+        if (externalType)
+        {
+            ResultTypeAbstract? itemType = state.EntityTypeCache.Where(i => i.Name == sqlFile.EntityName).FirstOrDefault();
+            if (!itemType.ColumnsMatch(columns, out string error))
+            {
+                errorMessage = error;
+            }
+        }
+
         return new ScriptClassFile(
             fileName: $"{sqlFile.CleanFileName}.cs",
             entityName: sqlFile.EntityName,
@@ -122,7 +133,9 @@ internal class QueryFile
             methodParams: methodParams,
             sqlParams: sqlParams,
             objectType: objectType,
-            ScriptType: sqlFile.ScriptType
+            ScriptType: sqlFile.ScriptType,
+            generateType: !externalType,
+            errorMessage: errorMessage
         );
     }
 

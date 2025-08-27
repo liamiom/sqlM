@@ -4,7 +4,7 @@ namespace sqlM.State;
 
 public class SqlFile : File
 {
-    public enum ObjectTypes { None, Query, Table, View, Function, StoredProcedure }
+    public enum ObjectTypes { None = 0, Query = 5, Table = 1, View = 2, Function = 3, StoredProcedure = 4 }
     public List<KeyValuePair<string, Type>> Paramiters { get; set; }
     public Dictionary<string, string> Names { get; set; }
     public ObjectTypes ScriptType { get; set; }

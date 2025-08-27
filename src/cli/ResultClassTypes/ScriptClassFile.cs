@@ -14,12 +14,15 @@ internal class ScriptClassFile : BaseClassFile
         string sqlParams,
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
-        string updateParams = "")
+        string updateParams = "",
+        bool generateType = true,
+        string errorMessage = "")
     {
         columns = DeduplicateColumnNames(columns);
 
         FileName = fileName;
         EntityName = entityName;
+        ErrorMessage = errorMessage;
         Content = GetContent(
             entityName,
             methodName,
@@ -29,7 +32,8 @@ internal class ScriptClassFile : BaseClassFile
             sqlParams,
             objectType,
             ScriptType,
-            updateParams
+            updateParams,
+            generateType
             );
         MethodSigniture = GetMethodSigniture(
             ScriptType,
@@ -49,7 +53,8 @@ internal class ScriptClassFile : BaseClassFile
         string sqlParams,
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
-        string updateParams)
+        string updateParams,
+        bool generateType)
     {
         bool isMethodType =
             ScriptType == State.SqlFile.ObjectTypes.Query ||
@@ -115,6 +120,7 @@ internal class ScriptClassFile : BaseClassFile
             IsScalar = isScalar,
             IsMethodType = isMethodType,
             IsTableType = isTableType,
+            GenerateType = generateType,
             ScalarTypeName = scalarTypeName,
             ReturnType = returnType,
             MethodParams = methodParams,
