@@ -82,20 +82,22 @@ namespace sqlM
 		    return output;
         }}
 
-        public async IAsyncEnumerable<{model.EntityName}> {model.MethodName}_GetAsync({model.GetParams})
+        public async Task<List<{model.EntityName}>> {model.MethodName}_GetAsync({model.GetParams})
         {{
             string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
             {Parameters(model.SqlParams)}
             SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
-		    while (dr.Read())
+            List<Asset> output = new List<Asset>();
+		    while (await dr.ReadAsync())
 		    {{
-                yield return 
-			    new {model.EntityName}
+			    output.Add(new {model.EntityName}
 			    {{
 {ToPropertySet(model.Columns)}
-			    }};
+			    }});
 		    }}
+
+            return output;
         }}
 
         public int {model.MethodName}_Set({model.MethodName} item) =>
@@ -347,20 +349,22 @@ namespace sqlM
 
     private static string QueryScalarAssignmentAsync(TemplateModel model) =>
         @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
-		    dr.Read();
+		    await dr.ReadAsync();
 		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
 		";
 
     private static string QueryAssignmentAsync(TemplateModel model) =>
         @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
-		    while (dr.Read())
+            List<Asset> output = new List<Asset>();
+		    while (await dr.ReadAsync())
 		    {{
-                yield return 
-			    new {model.EntityName}
+                output.Add(new {model.EntityName}
 			    {{
 {ToPropertySet(model.Columns)}
-			    }};
-		    }}";
+			    }});
+		    }}
+
+            return output";
 
     private static string StoredProcedureNonAssignmentAsync(TemplateModel model) =>
         @$"return await Generic_StoredProcedureNonQueryAsync(parameters, ""{model.MethodName}"") != 0";
@@ -384,9 +388,7 @@ namespace sqlM
 		    }}";
 
     private static string AsyncReturnType(string returnType) =>
-        returnType.Contains("List<")
-            ? returnType.Replace("List<", "IAsyncEnumerable<")
-            : $"Task<{returnType}>";
+        $"Task<{returnType}>";
 
     private static string ToPropertySet(List<Column> columns) =>
         columns
