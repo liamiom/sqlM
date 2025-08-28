@@ -123,9 +123,14 @@ internal class SqlFile
             .Replace("'", "")
             .Replace("~", "");
 
-    public static string CleanTypeName(string fullTypeName) =>
-        fullTypeName 
-            //.Replace("System.", "")
+    public static string CleanTypeName(string fullTypeName, string sqlTypeName = "")
+    {
+        if (fullTypeName == "System.DateTime" && sqlTypeName.ToLower() == "date")
+        {
+            fullTypeName = "DateOnly";
+        }
+
+        return fullTypeName
             .Replace("System.Int32", "int")
             .Replace("System.Boolean", "bool")
             .Replace("System.Byte", "byte")
@@ -134,4 +139,5 @@ internal class SqlFile
             .Replace("System.Double", "double")
             .Replace("System.TimeSpan", "DateTime")
             .Replace("System.String", "string");
+    }
 }

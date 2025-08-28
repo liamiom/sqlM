@@ -404,6 +404,8 @@ namespace sqlM
            "int?" => "GetNullableInt32",
            "DateTime" => "GetDateTime",
            "DateTime?" => "GetNullableDateTime",
+           "DateOnly" => "GetDateOnly",
+           "DateOnly?" => "GetNullableDateOnly",
            "decimal" => "GetDecimal",
            "decimal?" => "GetNullableDecimal",
            "double" => "GetDouble",

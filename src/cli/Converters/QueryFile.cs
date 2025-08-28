@@ -146,7 +146,7 @@ internal class QueryFile
         rows
             .Select((row, index) => new Column
             {
-                DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? ""),
+                DataType = SqlFile.CleanTypeName(row["DataType"]?.ToString() ?? "", row["DataTypeName"].ToString() ?? ""),
                 NullFlag = (((bool)row["AllowDBNull"]) == true ? "?" : ""),
                 ColumnName = row["ColumnName"]?.ToString().Replace(" ", "_") ?? "",
                 DefaultValue = (((bool)row["AllowDBNull"]) != true && row["DataType"].ToString() == "System.String" ? " = System.String.Empty;" : ""),

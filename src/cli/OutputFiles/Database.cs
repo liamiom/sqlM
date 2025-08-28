@@ -273,6 +273,10 @@ namespace sqlM
             dr.IsDBNull(i) ? new int?() : dr.GetInt32(i);
         public static DateTime? GetNullableDateTime(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new DateTime?() : dr.GetDateTime(i);
+        public static DateOnly GetDateOnly(this SqlDataReader dr, int i) =>
+            DateOnly.FromDateTime(dr.GetDateTime(i));
+        public static DateOnly? GetNullableDateOnly(this SqlDataReader dr, int i) =>
+            dr.IsDBNull(i) ? new DateOnly?() : DateOnly.FromDateTime(dr.GetDateTime(i));
         public static decimal? GetNullableDecimal(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new decimal?() : dr.GetDecimal(i);
         public static double? GetNullableDouble(this SqlDataReader dr, int i) =>
