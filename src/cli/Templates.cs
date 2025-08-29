@@ -88,7 +88,7 @@ namespace sqlM
 
             {Parameters(model.SqlParams)}
             SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
-            List<Asset> output = new List<Asset>();
+            List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (await dr.ReadAsync())
 		    {{
 			    output.Add(new {model.EntityName}
@@ -355,7 +355,7 @@ namespace sqlM
 
     private static string QueryAssignmentAsync(TemplateModel model) =>
         @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
-            List<Asset> output = new List<Asset>();
+            List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (await dr.ReadAsync())
 		    {{
                 output.Add(new {model.EntityName}
