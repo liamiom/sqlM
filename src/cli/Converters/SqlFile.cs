@@ -140,4 +140,9 @@ internal class SqlFile
             .Replace("System.TimeSpan", "DateTime")
             .Replace("System.String", "string");
     }
+
+    public static string MakeTypeNameNullable(string typeName) => 
+        !DotNet.IsDotnetCoreProject() && (typeName.EndsWith('?') || typeName == "string" || typeName == "System.IO.MemoryStream") 
+            ? typeName 
+            : typeName + "?";
 }

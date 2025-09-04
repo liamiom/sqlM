@@ -89,7 +89,7 @@ internal class ScriptClassFile : BaseClassFile
         {
             getParams = columns
             .Where(i => i.IsKey)
-            .Select(i => $"{i.FullDataType}? {i.ColumnName} = null")
+            .Select(i => $"{Converters.SqlFile.MakeTypeNameNullable(i.FullDataType)} {i.ColumnName} = null")
             .Join(", ");
 
             updateSet = columns
@@ -169,6 +169,11 @@ internal class ScriptClassFile : BaseClassFile
         List<Column> columns,
         string methodParams)
     {
+        if (string.IsNullOrWhiteSpace(entityName))
+        {
+            return "";
+        }
+
         bool isQuery = columns?.Count > 0;
         bool isScalar = columns?.Count == 1;
         string scalarTypeName = isScalar && columns != null

@@ -222,7 +222,7 @@ namespace sqlM
                     }
                     catch (SqlException ex)
                     {
-                        UpdateError error = new()
+                        UpdateError error = new UpdateError()
                         {
                             Name = script.Name,
                             Content = script.Content,
@@ -260,8 +260,6 @@ namespace sqlM
 
     public interface IDatabase
     {
-        public string GetConnectionString();
-        public bool Update();
 // Interface fields go here
     }
 

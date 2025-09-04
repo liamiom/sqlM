@@ -54,12 +54,12 @@ internal class StoredProcedureFile
         {
             methodParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n\t\t\t{SqlFile.CleanTypeName(i.Value.FullName) ?? ""}? {i.Key}")
+                .Select(i => $"\n\t\t\t{SqlFile.MakeTypeNameNullable(SqlFile.CleanTypeName(i.Value.FullName)) ?? ""} {i.Key}")
                 .Aggregate((a, b) => $"{a},{b}");
 
             sqlParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n\t\t\t\tnew SqlParameter(\"{i.Key}\", {i.Key} is null ? DBNull.Value : {i.Key}),")
+                .Select(i => $"\n\t\t\t\tToSqlParameter(\"{i.Key}\", {i.Key}),")
                 .Aggregate((a, b) => $"{a}{b}");
         }
 

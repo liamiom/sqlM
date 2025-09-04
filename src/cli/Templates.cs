@@ -21,7 +21,7 @@ internal static class Templates
 
 using System;
 using {(DotNet.IsDotnetCoreProject() ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient")};
-using System.Collections.Generic;
+using System.Collections.Generic;{(DotNet.IsDotnetCoreProject() ? "" : "\nusing System.Threading.Tasks;")}
 
 namespace sqlM
 {{
@@ -59,7 +59,7 @@ namespace sqlM
 ";
 
     private static string CrudClass(TemplateModel model) =>
-        !model.IsTableType
+        !model.IsTableType || string.IsNullOrWhiteSpace(model.EntityName)
         ? ""
         : $@"
     public partial class Database
@@ -205,8 +205,8 @@ namespace sqlM
 ";
 
     private static string GetCrudUpdateCheck(List<Column> columns) =>
-        columns.Count == 0
-            ? "false"
+        !columns.Any(i => i.IsKey)
+            ? "true"
             : columns
                 .Where(i => i.IsKey)
                 .Select(i => GetHasValueCheck(i.DataType, i.ColumnName))
@@ -221,7 +221,7 @@ namespace sqlM
         };
 
     private static string GetCrudWhereFilter(List<Column> columns) =>
-        columns.Count == 0
+        !columns.Any(i => i.IsKey)
             ? ""
             : "WHERE " + columns
                 .Where(i => i.IsKey)
@@ -380,12 +380,13 @@ namespace sqlM
 		    List<{model.EntityName}> output = new List<{model.EntityName}>();
 		    while (dr.Read())
 		    {{
-                yield return 
-			    new {model.EntityName}
+                output.Add(new {model.EntityName}
 			    {{
 {ToPropertySet(model.Columns)}
-			    }};
-		    }}";
+			    }});
+		    }}
+
+		    return output";
 
     private static string AsyncReturnType(string returnType) =>
         $"Task<{returnType}>";

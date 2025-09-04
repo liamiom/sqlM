@@ -23,6 +23,13 @@ internal class TableFile
 
         string entityName = Regex.Replace(content, @".*(CREATE|ALTER)\s+TABLE\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
+
+        // Check that the entity name looks reasonable
+        if (entityName.Length > 100 || entityName.Contains(' ') || entityName.Contains(')'))
+        {
+            entityName = "";
+        }
+
         taskProgress.Increment(1);
         return new State.SqlFile()
         {
@@ -72,10 +79,14 @@ internal class TableFile
                 .Aggregate((a, b) => $"{a}{b}");
         }
 
-        string updateParams = columns
-            .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
-            .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", item.{i.Key}),")
-            .Aggregate((a, b) => $"{a}{b}");
+        string updateParams = "";
+        if (columns.Count > 0)
+        {
+            updateParams = columns
+                .Select(i => new KeyValuePair<string, Type>(i.ColumnName, SqlFile.GetTypeFromTidySqlName(i.FullDataType)))
+                .Select(i => $"\n                ToSqlParameter(\"{i.Key}\", item.{i.Key}),")
+                .Aggregate((a, b) => $"{a}{b}");
+        }
 
 
         return new ScriptClassFile(
@@ -92,17 +103,21 @@ internal class TableFile
         );
     }
 
-    private static string[] GetPrimaryKeys(string content) => 
-        content
-            .RegexReplace(".*PRIMARY KEY[^\\(]*\\(([^\\)]*).*", "$1", RegexOptions.Singleline) // Trim down to the keys section 
-            .RegexReplace(".*\\[(.+)\\].*", "$1 ") // Split out the column names 
-            .Split(' ')
-            .Where(i => !string.IsNullOrWhiteSpace(i))
-            .Select(i => i.Trim())
-            .ToArray();
+    private static string[] GetPrimaryKeys(string content) =>
+        !content.Contains("PRIMARY KEY")
+            ? []
+            : content
+                .RegexReplace(".*PRIMARY KEY[^\\(]*\\(([^\\)]*).*", "$1", RegexOptions.Singleline) // Trim down to the keys section 
+                .RegexReplace(".*\\[(.+)\\].*", "$1 ") // Split out the column names 
+                .Split(' ')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Select(i => i.Trim())
+                .ToArray();
 
     private static IEnumerable<DataRow> GetRows(State.SqlFile sqlFile, string conString) =>
-        GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
+        string.IsNullOrWhiteSpace(sqlFile.EntityName)
+            ? new List<DataRow>()
+            : GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
 
     private static List<Column> GetProperties(IEnumerable<DataRow> rows, string[] keys) =>
         rows
@@ -141,7 +156,7 @@ internal class TableFile
         catch (Exception ex)
         {
             string splitterLine = "".PadRight(70, '*');
-            string errorMessage = $"\n[red]Error running {script.CleanFileName}[/]\n\n{splitterLine}\n{script.Content}\n{splitterLine}\n{ex.Message}\n".Replace("[", "[[").Replace("]", "]]");
+            string errorMessage = $"\n\n{splitterLine}\n{script.Content}\n{splitterLine}\n{ex.Message}\n".Replace("[", "[[").Replace("]", "]]");
 
             throw new ProcessingException(ex.Message, ex, $"\n[red]Error running {script.CleanFileName}\n\n[/]{errorMessage}\n", script.FileName, script.CleanFileName);
         }

@@ -18,6 +18,7 @@ internal class FunctionFile
         // Todo: this should check the hash code against the generated files and skip files that are not changed
 
 
+        // Todo: add in Get method generation compatible with a function and then add this back in
         string entityName = Regex.Replace(content, @".*(CREATE|ALTER)\s+FUNCTION\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
         taskProgress.Increment(1);
@@ -25,7 +26,7 @@ internal class FunctionFile
         {
             FileName = fileName,
             CleanFileName = SqlFile.CleanFileName(fileName),
-            EntityName = entityName,
+            EntityName = "",
             Content = content,
             Paramiters = parms,
             Names = new Dictionary<string, string>(),

@@ -99,7 +99,7 @@ internal class QueryFile
 
             sqlParams =
                 sqlFile.Paramiters
-                .Select(i => $"\n            new SqlParameter(\"{i.Key}\", {i.Key} is null ? DBNull.Value : {i.Key} ),")
+                .Select(i => $"\n            ToSqlParameter(\"{i.Key}\", {i.Key}),")
                 .Aggregate((a, b) => $"{a}{b}");
         }
 

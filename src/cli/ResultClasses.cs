@@ -116,7 +116,7 @@ namespace sqlM
 
         string sqlParams =
             Script.Paramiters
-                .Select(i => $"\t\t\t\tnew SqlParameter(\"@{i.Key}\", {i.Key}),")
+                .Select(i => $"\t\t\t\tToSqlParameter(\"@{i.Key}\", {i.Key}),")
                 .ToMultiLineString();
 
         string fileContent =

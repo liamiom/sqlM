@@ -151,7 +151,15 @@ internal class FileHandler
 
         string interfaceFields = classFiles
             .Select(i => i.MethodSigniture ?? "")
+            .Prepend("        public bool Update();")
+            .Prepend("        public string GetConnectionString();")
+            .Where(i => !string.IsNullOrWhiteSpace(i))
             .Join("\n");
+
+        if (!DotNet.IsDotnetCoreProject())
+        {
+            interfaceFields = interfaceFields.Replace("public ", "");
+        }
 
         dbFile.Content = dbFile.Content.Replace(
                     "// Interface fields go here",
@@ -161,17 +169,23 @@ internal class FileHandler
         if (!DotNet.IsDotnetCoreProject())
         {
             dbFile.Content = dbFile.Content.Replace(
-                    "using Microsoft.Data.SqlClient;",
-                    "using System.Data.SqlClient;"
+                    "using System;\nusing Microsoft.Data.SqlClient;\nusing System.Text.RegularExpressions;",
+                    "using System;\nusing System.Collections.Generic;\nusing System.Data.SqlClient;\nusing System.Linq;\nusing System.Text.RegularExpressions;\nusing System.Threading.Tasks;"
                 ).Replace(
                     "public event EventHandler<UpdateScript>? RunningScript;",
                     "public event EventHandler<UpdateScript> RunningScript;"
                 ).Replace(
-                    "public event EventHandler<UpdateScript>? ScriptError;",
-                    "public event EventHandler<UpdateScript> ScriptError;"
+                    "public event EventHandler<UpdateError>? ScriptError;",
+                    "public event EventHandler<UpdateError> ScriptError;"
                 ).Replace(
                     "public static string? GetNullableString",
                     "public static string GetNullableString"
+                ).Replace(
+                    "public static SqlParameter ToSqlParameter(string name, object? value) =>",
+                    "public static SqlParameter ToSqlParameter(string name, object value) =>"
+                ).Replace(
+                    "string?",
+                    "string"
                 );
         }
 
