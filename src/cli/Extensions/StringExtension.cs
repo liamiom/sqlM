@@ -54,6 +54,12 @@ internal static class StringExtension
     public static string[] RegexMatchAll(this string input, string pattern, RegexOptions options = RegexOptions.IgnoreCase) =>
         Regex.Matches(input, pattern, options).Select(x => x.Value).ToArray();
 
+    public static string[] RegexMatchThenReplaceAll(this string input, string pattern, string replacement, RegexOptions options = RegexOptions.IgnoreCase) =>
+        RegexMatchThenReplaceAll(input, pattern, pattern, replacement, options);
+
+    public static string[] RegexMatchThenReplaceAll(this string input, string globalPattern, string itemPattern, string replacement, RegexOptions options = RegexOptions.IgnoreCase) =>
+        RegexMatchAll(input, globalPattern, options).Select(i => i.RegexReplace(itemPattern, replacement)).ToArray();
+
     public static string RegexFind(this string input, string pattern) =>
         Regex.Match(input, pattern, RegexOptions.Multiline).ToString();
 

@@ -10,6 +10,7 @@ public class SqlFile : File
     public ObjectTypes ScriptType { get; set; }
     public List<SqlFile> Dependencies { get; set; } = new List<SqlFile>();
     public int SortOrder { get; set; } = 0;
+    public ResultClassTypes.Flags OverrideFlags { get; set; } = new ResultClassTypes.Flags();
 
     public string[] ContentSplitOnGo()
     {

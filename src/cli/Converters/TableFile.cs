@@ -20,8 +20,9 @@ internal class TableFile
         string hash = SqlFile.GetFileHash(fileName);
         // Todo: this should check the hash code against the generated files and skip files that are not changed
 
-
-        string entityName = Regex.Replace(content, @".*(CREATE|ALTER)\s+TABLE\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        Flags flags = new(content);
+        string entityName = flags.EntityName;
+        //string entityName = Regex.Replace(content, @".*(CREATE|ALTER)\s+TABLE\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
 
         // Check that the entity name looks reasonable
@@ -42,6 +43,7 @@ internal class TableFile
             Hash = hash,
             Path = Path.GetRelativePath(workingDirectory, fileName),
             ScriptType = State.SqlFile.ObjectTypes.Table,
+            OverrideFlags = flags
         };
     }
 
@@ -99,7 +101,8 @@ internal class TableFile
             sqlParams: sqlParams,
             objectType: ScriptClassFile.ObjectReturnTypes.Table,
             ScriptType: sqlFile.ScriptType,
-            updateParams
+            updateParams: updateParams,
+            crudMethods: sqlFile.OverrideFlags.GenerateCrudMethods
         );
     }
 

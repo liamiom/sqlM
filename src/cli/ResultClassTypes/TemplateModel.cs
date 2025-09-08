@@ -22,5 +22,6 @@ internal class TemplateModel
     public required string InsertParams;
     public required string QueryParams;
     public required string UpdateParams;
+    public required bool CrudMethods;
     public required List<Column> Columns;
 }

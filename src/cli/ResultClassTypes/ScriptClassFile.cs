@@ -16,6 +16,7 @@ internal class ScriptClassFile : BaseClassFile
         State.SqlFile.ObjectTypes ScriptType,
         string updateParams = "",
         bool generateType = true,
+        bool crudMethods = false,
         string errorMessage = "")
     {
         columns = DeduplicateColumnNames(columns);
@@ -33,7 +34,8 @@ internal class ScriptClassFile : BaseClassFile
             objectType,
             ScriptType,
             updateParams,
-            generateType
+            generateType,
+            crudMethods
             );
         MethodSigniture = GetMethodSigniture(
             ScriptType,
@@ -54,7 +56,8 @@ internal class ScriptClassFile : BaseClassFile
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
         string updateParams,
-        bool generateType)
+        bool generateType,
+        bool crudMethods)
     {
         bool isMethodType =
             ScriptType == State.SqlFile.ObjectTypes.Query ||
@@ -131,6 +134,7 @@ internal class ScriptClassFile : BaseClassFile
             InsertParams = insertParams,
             QueryParams = sqlParams,
             UpdateParams = updateParams,
+            CrudMethods = crudMethods,
             Columns = columns,
         };
 

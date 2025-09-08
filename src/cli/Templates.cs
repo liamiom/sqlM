@@ -59,7 +59,7 @@ namespace sqlM
 ";
 
     private static string CrudClass(TemplateModel model) =>
-        !model.IsTableType || string.IsNullOrWhiteSpace(model.EntityName)
+        !model.IsTableType || !model.CrudMethods || string.IsNullOrWhiteSpace(model.EntityName)
         ? ""
         : $@"
     public partial class Database
