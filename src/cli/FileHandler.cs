@@ -36,14 +36,14 @@ internal class FileHandler
         string functionScriptsPath = Path.Combine(state.SourceDirectory, "Functions");
         string storedProcedureScriptsPath = Path.Combine(state.SourceDirectory, "Procedures");
         
-        // Add or update the Query read me file
-        if (!Directory.Exists(queryScriptsPath))
-        {
-            Directory.CreateDirectory(queryScriptsPath);
-            BaseClassFile sourceReadMeFile = GetSqlFolderREADMEFile();
-            string fullFileName = Path.Combine(queryScriptsPath, sourceReadMeFile.FileName);
-            System.IO.File.WriteAllText(fullFileName, sourceReadMeFile.Content);
-        }
+        // Add or update the read me files
+        UpdateReadMeFiles(
+            state.SourceDirectory,
+            queryScriptsPath,
+            tableScriptsPath,
+            viewScriptsPath,
+            functionScriptsPath,
+            storedProcedureScriptsPath);
 
         return new FileCollection
         {
@@ -323,8 +323,36 @@ internal class FileHandler
         return (false, errorMessage);
     }
 
-    private static BaseClassFile GetSqlFolderREADMEFile() => 
-        GetEmbeddedFile("SqlFolderREADME.md", "README.md");
+    private static void UpdateReadMeFiles(
+        string sourceDirectory,
+        string queryScriptsPath,
+        string tableScriptsPath,
+        string viewScriptsPath,
+        string functionScriptsPath,
+        string storedProcedureScriptsPath)
+    {
+        UpdateReadMeFile(sourceDirectory, "SqlREADME.md");
+        UpdateReadMeFile(queryScriptsPath, "QueryREADME.md");
+        UpdateReadMeFile(tableScriptsPath, "TableREADME.md");
+        UpdateReadMeFile(viewScriptsPath, "ViewREADME.md");
+        UpdateReadMeFile(functionScriptsPath, "FunctionREADME.md");
+        UpdateReadMeFile(storedProcedureScriptsPath, "StoredProcedureREADME.md");
+    }
+
+    private static void UpdateReadMeFile(string folderName, string fileName)
+    {
+        if (!Directory.Exists(folderName))
+        {
+            Directory.CreateDirectory(folderName);
+        }
+
+        BaseClassFile sourceReadMeFile = GetSqlFolderREADMEFile(fileName);
+        string fullFileName = Path.Combine(folderName, sourceReadMeFile.FileName);
+        System.IO.File.WriteAllText(fullFileName, sourceReadMeFile.Content);
+    }
+
+    private static BaseClassFile GetSqlFolderREADMEFile(string fileName) =>
+        GetEmbeddedFile(fileName, "README.md");
 
     public static BaseClassFile GetEmbeddedFile(string resourceName, string fileName, string resourceFolder = "sqlM.OutputFiles.")
     {

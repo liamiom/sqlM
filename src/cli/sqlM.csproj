@@ -14,27 +14,37 @@
 
   <ItemGroup>
     <None Remove="OutputFiles\Function.sql" />
+    <None Remove="OutputFiles\FunctionREADME.md" />
     <None Remove="OutputFiles\Query.sql" />
-    <None Remove="OutputFiles\SqlFolderREADME.md" />
+    <None Remove="OutputFiles\QueryREADME.md" />
+    <None Remove="OutputFiles\SqlREADME.md" />
     <None Remove="OutputFiles\StoredProcedure.sql" />
+    <None Remove="OutputFiles\StoredProcedureREADME.md" />
     <None Remove="OutputFiles\Table.sql" />
+    <None Remove="OutputFiles\TableREADME.md" />
     <None Remove="OutputFiles\Table_AddColumn.sql" />
     <None Remove="OutputFiles\View.sql" />
+    <None Remove="OutputFiles\ViewREADME.md" />
     <None Remove="README.md" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="OutputFiles\Function.sql" />
+    <EmbeddedResource Include="OutputFiles\FunctionREADME.md" />
     <EmbeddedResource Include="OutputFiles\Query.sql" />
     <EmbeddedResource Include="OutputFiles\Database.cs">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="OutputFiles\SqlFolderREADME.md" />
+    <EmbeddedResource Include="OutputFiles\QueryREADME.md" />
+    <EmbeddedResource Include="OutputFiles\SqlREADME.md" />
     <EmbeddedResource Include="OutputFiles\StoredProcedure.sql" />
+    <EmbeddedResource Include="OutputFiles\StoredProcedureREADME.md" />
     <EmbeddedResource Include="OutputFiles\Table.sql" />
+    <EmbeddedResource Include="OutputFiles\TableREADME.md" />
     <EmbeddedResource Include="OutputFiles\Table_AddColumn.sql" />
     <EmbeddedResource Include="OutputFiles\View.sql" />
     <EmbeddedResource Include="..\..\README.md" />
+    <EmbeddedResource Include="OutputFiles\ViewREADME.md" />
   </ItemGroup>
 
   <ItemGroup>

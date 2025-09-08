@@ -16,7 +16,7 @@ public class Flags
     {
         Dictionary<string, string> flagLines = GetFlagLines(content);
         EntityName = GetFlagString(flagLines, "TypeName");
-        GenerateCrudMethods = GetFlagBool(flagLines, "CrudMethods");
+        GenerateCrudMethods = GetFlagBool(flagLines, "CrudMethods") && !string.IsNullOrWhiteSpace(EntityName);
     }
 
     private static Dictionary<string, string> GetFlagLines(string content) =>
