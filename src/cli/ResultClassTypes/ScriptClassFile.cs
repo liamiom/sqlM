@@ -42,7 +42,8 @@ internal class ScriptClassFile : BaseClassFile
             entityName,
             methodName,
             columns,
-            methodParams
+            methodParams,
+            crudMethods
             );
     }
 
@@ -171,9 +172,10 @@ internal class ScriptClassFile : BaseClassFile
         string entityName,
         string methodName,
         List<Column> columns,
-        string methodParams)
+        string methodParams,
+        bool crudMethods)
     {
-        if (string.IsNullOrWhiteSpace(entityName))
+        if (string.IsNullOrWhiteSpace(entityName) || (!crudMethods && ScriptType == State.SqlFile.ObjectTypes.Table))
         {
             return "";
         }

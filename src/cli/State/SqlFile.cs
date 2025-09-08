@@ -8,6 +8,7 @@ public class SqlFile : File
     public List<KeyValuePair<string, Type>> Paramiters { get; set; }
     public Dictionary<string, string> Names { get; set; }
     public ObjectTypes ScriptType { get; set; }
+    public string TableName { get; set; }
     public List<SqlFile> Dependencies { get; set; } = new List<SqlFile>();
     public int SortOrder { get; set; } = 0;
     public ResultClassTypes.Flags OverrideFlags { get; set; } = new ResultClassTypes.Flags();

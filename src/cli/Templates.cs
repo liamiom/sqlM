@@ -237,7 +237,7 @@ namespace sqlM
             : "SELECT CAST(1 AS int)";
 
     private static string EntityTypeClass(TemplateModel model) =>
-        model.Columns.Count == 0 || model.IsScalar || !model.GenerateType
+        model.Columns.Count == 0 || model.IsScalar || !model.GenerateType || string.IsNullOrWhiteSpace(model.EntityName)
             ? ""
             : $@"
     public partial class {model.EntityName} 

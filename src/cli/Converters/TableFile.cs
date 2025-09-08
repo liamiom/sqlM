@@ -22,13 +22,13 @@ internal class TableFile
 
         Flags flags = new(content);
         string entityName = flags.EntityName;
-        //string entityName = Regex.Replace(content, @".*(CREATE|ALTER)\s+TABLE\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        string tableName = Regex.Replace(content, @".*(CREATE|ALTER)\s+TABLE\s(\[\S+\]\.)\[?([^\]|\s]+)\]?.*", "$3", RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
 
         // Check that the entity name looks reasonable
-        if (entityName.Length > 100 || entityName.Contains(' ') || entityName.Contains(')'))
+        if (tableName.Length > 100 || tableName.Contains(' ') || tableName.Contains(')'))
         {
-            entityName = "";
+            tableName = "";
         }
 
         taskProgress.Increment(1);
@@ -43,7 +43,8 @@ internal class TableFile
             Hash = hash,
             Path = Path.GetRelativePath(workingDirectory, fileName),
             ScriptType = State.SqlFile.ObjectTypes.Table,
-            OverrideFlags = flags
+            OverrideFlags = flags,
+            TableName = tableName,
         };
     }
 
@@ -118,7 +119,7 @@ internal class TableFile
                 .ToArray();
 
     private static IEnumerable<DataRow> GetRows(State.SqlFile sqlFile, string conString) =>
-        string.IsNullOrWhiteSpace(sqlFile.EntityName)
+        string.IsNullOrWhiteSpace(sqlFile.TableName)
             ? new List<DataRow>()
             : GetTableSchema(sqlFile, conString)?.Rows.ToRowEnumerable() ?? new List<DataRow>();
 
@@ -140,7 +141,7 @@ internal class TableFile
     {
         try
         {
-            string sqlString = $"SELECT * FROM {script.EntityName}";
+            string sqlString = $"SELECT * FROM {script.TableName}";
             SqlConnection conn = new(conString);
 
             conn.Open();

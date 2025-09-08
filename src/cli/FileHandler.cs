@@ -348,7 +348,8 @@ internal class FileHandler
 
         BaseClassFile sourceReadMeFile = GetSqlFolderREADMEFile(fileName);
         string fullFileName = Path.Combine(folderName, sourceReadMeFile.FileName);
-        System.IO.File.WriteAllText(fullFileName, sourceReadMeFile.Content);
+
+        SaveIfChanged(fullFileName, sourceReadMeFile.Content);
     }
 
     private static BaseClassFile GetSqlFolderREADMEFile(string fileName) =>
