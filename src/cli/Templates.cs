@@ -69,17 +69,15 @@ namespace sqlM
             string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
             {Parameters(model.SqlParams)}
-            SqlDataReader dr = Generic_OpenReader(parameters, script);
-            List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (dr.Read())
-		    {{
-			    output.Add(new {model.EntityName}
-			    {{
+            {model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
+                {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+                }};
+            }}
 
-		    return output;
+            return Generic_OpenReader(parameters, script, convert);
         }}
 
         public async Task<List<{model.EntityName}>> {model.MethodName}_GetAsync({model.GetParams})
@@ -87,17 +85,15 @@ namespace sqlM
             string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
             {Parameters(model.SqlParams)}
-            SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
-            List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (await dr.ReadAsync())
-		    {{
-			    output.Add(new {model.EntityName}
-			    {{
+            {model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
+                {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+                }};
+            }}
 
-            return output;
+            return await Generic_OpenReaderAsync(parameters, script, convert);
         }}
 
         public int {model.MethodName}_Set({model.MethodName} item) =>
@@ -298,17 +294,15 @@ namespace sqlM
 		";
 
     private static string QueryAssignment(TemplateModel model) =>
-        @$"SqlDataReader dr = Generic_OpenReader(parameters, {model.TypeStaticClassName}.{model.MethodName});
-		    List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (dr.Read())
-		    {{
-			    output.Add(new {model.EntityName}
-			    {{
+        @$"{model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
+                {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+                }};
+            }}
 
-		    return output";
+            return Generic_OpenReader(parameters, {model.TypeStaticClassName}.{model.MethodName}, convert);";
 
     private static string StoredProcedureNonAssignment(TemplateModel model) =>
         @$"return Generic_StoredProcedureNonQuery(parameters, ""{model.MethodName}"") != 0";
@@ -354,17 +348,15 @@ namespace sqlM
 		";
 
     private static string QueryAssignmentAsync(TemplateModel model) =>
-        @$"SqlDataReader dr = await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName});
-            List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (await dr.ReadAsync())
-		    {{
-                output.Add(new {model.EntityName}
-			    {{
+        @$"{model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
+                {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+                }};
+            }}
 
-            return output";
+            return await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName}, convert);";
 
     private static string StoredProcedureNonAssignmentAsync(TemplateModel model) =>
         @$"return await Generic_StoredProcedureNonQueryAsync(parameters, ""{model.MethodName}"") != 0";

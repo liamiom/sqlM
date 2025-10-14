@@ -45,156 +45,207 @@ namespace sqlM
                 "            \"Data Source=localhost;Initial Catalog=DatabaseName;Integrated Security=SSPI;\";\n" +
                 "}\n");
 
-        private SqlDataReader Generic_OpenReader(SqlParameter[] parameters, string script)
+        private List<T> Generic_OpenReader<T>(SqlParameter[] parameters, string script, Func<SqlDataReader, T> converter)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = script;
-            cmd.Connection = conn;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = script;
+                    cmd.Connection = conn;
 
-            conn.Open();
-            return cmd.ExecuteReader();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    List<T> output = new List<T>();
+                    while (dr.Read())
+                    {
+                        output.Add(converter(dr));
+                    }
+
+                    return output;
+                }
+            }
         }
 
-        private async Task<SqlDataReader> Generic_OpenReaderAsync(SqlParameter[] parameters, string script)
+        private async Task<List<T>> Generic_OpenReaderAsync<T>(SqlParameter[] parameters, string script, Func<SqlDataReader, T> converter)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = script;
-            cmd.Connection = conn;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
 
-            conn.Open();
-            return await cmd.ExecuteReaderAsync();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = script;
+
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    SqlDataReader dr = await cmd.ExecuteReaderAsync();
+                    List<T> output = new List<T>();
+                    while (await dr.ReadAsync())
+                    {
+                        output.Add(converter(dr));
+                    }
+
+                    return output;
+                }
+            }
         }
 
         private object Generic_OpenSingle(SqlParameter[] parameters, string script)
         {
-            SqlDataReader dr = Generic_OpenReader(parameters, script);
-            dr.Read();
+            object convert(SqlDataReader dr)
+            {
+                return dr.FieldCount == 1
+                    ? dr[0]
+                    : null;
+            }
 
-            return dr.FieldCount == 1
-                ? dr[0]
-                : null;
+            return Generic_OpenReader(parameters, script, convert).FirstOrDefault();
         }
 
         private async Task<object> Generic_OpenSingleAsync(SqlParameter[] parameters, string script)
         {
-            SqlDataReader dr = await Generic_OpenReaderAsync(parameters, script);
-            dr.Read();
+            object convert(SqlDataReader dr)
+            {
+                return dr.FieldCount == 1
+                    ? dr[0]
+                    : null;
+            }
 
-            return dr.FieldCount == 1
-                ? dr[0]
-                : null;
+            return (await Generic_OpenReaderAsync(parameters, script, convert)).FirstOrDefault();
         }
 
         private int Generic_ExecuteNonQuery(SqlParameter[] parameters, string script)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = script;
-            cmd.Connection = conn;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = script;
+                    cmd.Connection = conn;
 
-            conn.Open();
-            return cmd.ExecuteNonQuery();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         private async Task<int> Generic_ExecuteNonQueryAsync(SqlParameter[] parameters, string script)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = script;
-            cmd.Connection = conn;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = script;
+                    cmd.Connection = conn;
 
-            conn.Open();
-            return await cmd.ExecuteNonQueryAsync();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return await cmd.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         private SqlDataReader Generic_StoredProcedureReader(SqlParameter[] parameters, string name)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = name;
-            cmd.Connection = conn;
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = name;
+                    cmd.Connection = conn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
-            conn.Open();
-            return cmd.ExecuteReader();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return cmd.ExecuteReader();
+                }
+            }
         }
 
         private async Task<SqlDataReader> Generic_StoredProcedureReaderAsync(SqlParameter[] parameters, string name)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = name;
-            cmd.Connection = conn;
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = name;
+                    cmd.Connection = conn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
-            conn.Open();
-            return await cmd.ExecuteReaderAsync();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return await cmd.ExecuteReaderAsync();
+                }
+            }
         }
 
         private int Generic_StoredProcedureNonQuery(SqlParameter[] parameters, string name)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = name;
-            cmd.Connection = conn;
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = name;
+                    cmd.Connection = conn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
-            conn.Open();
-            return cmd.ExecuteNonQuery();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         private async Task<int> Generic_StoredProcedureNonQueryAsync(SqlParameter[] parameters, string name)
         {
-            SqlConnection conn = new SqlConnection(_connectionString);
-            SqlCommand cmd = conn.CreateCommand();
-            cmd.CommandText = name;
-            cmd.Connection = conn;
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-            if (parameters.Length > 0)
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                cmd.Parameters.AddRange(parameters);
-            }
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = name;
+                    cmd.Connection = conn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
-            conn.Open();
-            return await cmd.ExecuteNonQueryAsync();
+                    if (parameters.Length > 0)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+
+                    return await cmd.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         public bool Update()
