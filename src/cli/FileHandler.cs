@@ -123,7 +123,7 @@ internal class FileHandler
     private static void SaveIfChanged(string fileName, string updatedContent)
     {
         string currentContent = System.IO.File.Exists(fileName)
-            ? System.IO.File.ReadAllText(fileName)
+            ? System.IO.File.ReadAllText(fileName).Replace("\r\n", "\n")
             : "";
 
         if (currentContent != updatedContent)
