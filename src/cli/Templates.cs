@@ -46,12 +46,14 @@ namespace sqlM
     {{
         public {model.ReturnType} {model.MethodName}({model.MethodParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
             {GetAssignment(model)};
         }}
 
         public async {AsyncReturnType(model.ReturnType)} {model.MethodName}Async({model.MethodParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}Async"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
             {GetAssignmentAsync(model)};
         }}
@@ -66,6 +68,7 @@ namespace sqlM
     {{
         public List<{model.EntityName}> {model.MethodName}_Get({model.GetParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Get"", ""{model.EntityName}""));
             string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
             {Parameters(model.SqlParams)}
@@ -82,6 +85,7 @@ namespace sqlM
 
         public async Task<List<{model.EntityName}>> {model.MethodName}_GetAsync({model.GetParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_GetAsync"", ""{model.EntityName}""));
             string script = @""SELECT * FROM {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
 
             {Parameters(model.SqlParams)}
@@ -103,6 +107,7 @@ namespace sqlM
 
         public int {model.MethodName}_Update({model.MethodName} item)
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Update"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
             string script = @""
                 UPDATE {model.MethodName} 
@@ -121,6 +126,7 @@ namespace sqlM
 
         public int {model.MethodName}_Add({model.MethodName} item)
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Add"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
             string script = @""
                 INSERT INTO {model.MethodName} (
@@ -146,6 +152,7 @@ namespace sqlM
 
         public async Task<int> {model.MethodName}_UpdateAsync({model.MethodName} item)
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_UpdateAsync"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
             string script = @""
                 UPDATE {model.MethodName} 
@@ -164,6 +171,7 @@ namespace sqlM
 
         public async Task<int> {model.MethodName}_AddAsync({model.MethodName} item)
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_AddAsync"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
             string script = @""
                 INSERT INTO {model.MethodName} (
@@ -184,6 +192,7 @@ namespace sqlM
 
         public bool {model.MethodName}_Del({model.GetParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Del"", ""{model.EntityName}""));
             string script = @""DELETE {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
             {Parameters(model.SqlParams)}
             Generic_ExecuteNonQuery(parameters, script);
@@ -192,6 +201,7 @@ namespace sqlM
 
         public async Task<bool> {model.MethodName}_DelAsync({model.GetParams})
         {{
+            DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_DelAsync"", ""{model.EntityName}""));
             string script = @""DELETE {model.MethodName} {GetCrudWhereFilter(model.Columns)}"";
             {Parameters(model.SqlParams)}
             await Generic_ExecuteNonQueryAsync(parameters, script);

@@ -22,6 +22,7 @@ namespace sqlM
         private string _connectionString;
         public event EventHandler<UpdateScript>? RunningScript;
         public event EventHandler<UpdateError>? ScriptError;
+        public event EventHandler<UpdateDatabaseInteraction>? DatabaseInteraction;
 
         public Database(string connectionString)
         {
@@ -356,5 +357,17 @@ namespace sqlM
         public string Name { get; set; }
         public string Content { get; set; }
         public SqlException Error { get; set; }
+    }
+
+    public class UpdateDatabaseInteraction
+    {
+        public string MethodName { get; set; }
+        public string TypeName { get; set; }
+
+        public UpdateDatabaseInteraction(string methodName, string typeName)
+        {
+            MethodName = methodName;
+            TypeName = typeName;
+        }
     }
 }
