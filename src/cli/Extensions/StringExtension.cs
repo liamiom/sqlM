@@ -64,7 +64,7 @@ internal static class StringExtension
         Regex.Match(input, pattern, RegexOptions.Multiline).ToString();
 
     public static string RegexFind(this string input, string pattern, string replacement) =>
-        Regex.Match(input, pattern, RegexOptions.Multiline).ToString().RegexReplace(pattern, replacement);
+        Regex.Match(input, pattern, RegexOptions.Multiline | RegexOptions.IgnoreCase).ToString().RegexReplace(pattern, replacement);
 
     public static string AnsiSafe(this string input) =>
         input.Replace("[", "[[").Replace("]", "]]");

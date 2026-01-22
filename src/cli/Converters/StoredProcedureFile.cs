@@ -17,11 +17,7 @@ internal class StoredProcedureFile
 
         string objectName = cleanLines.FirstOrDefault("");
         string paramText = cleanLines.LastOrDefault("");
-
-        string typeNameOverride = content.RegexFind(@"--\W+typename\W*=\W*([^\W]+).*", @"$1");
-        string entityName = string.IsNullOrWhiteSpace(typeNameOverride)
-            ? objectName
-            : typeNameOverride;
+        string entityName = GetEntityName(content, objectName);
 
         List<KeyValuePair<string, Type>> parms = SqlFile.GetParams(paramText);
 
@@ -42,6 +38,21 @@ internal class StoredProcedureFile
             Path = Path.GetRelativePath(workingDirectory, fileName),
             ScriptType = State.SqlFile.ObjectTypes.StoredProcedure,
         };
+    }
+
+    private static string GetEntityName(string content, string objectName)
+    {
+        string typeNameLine = content.RegexFind(@"--\W+typename\W*=\W*([^\W]+).*", @"$1");
+        if (string.IsNullOrWhiteSpace(typeNameLine))
+        {
+            return objectName;
+        }
+
+        string[] split = typeNameLine.Split('=');
+
+        return split.Length == 2
+            ? split[1].Trim()
+            : objectName;
     }
 
     public static BaseClassFile GenerateClassFile(Container state, State.SqlFile sqlFile)
