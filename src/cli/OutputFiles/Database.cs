@@ -165,7 +165,7 @@ namespace sqlM
             }
         }
 
-        private SqlDataReader Generic_StoredProcedureReader(SqlParameter[] parameters, string name)
+        private List<T> Generic_StoredProcedureReader<T>(SqlParameter[] parameters, string name, Func<SqlDataReader, T> converter)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
@@ -181,12 +181,19 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    return cmd.ExecuteReader();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    List<T> output = new List<T>();
+                    while (dr.Read())
+                    {
+                        output.Add(converter(dr));
+                    }
+
+                    return output;
                 }
             }
         }
 
-        private async Task<SqlDataReader> Generic_StoredProcedureReaderAsync(SqlParameter[] parameters, string name)
+        private async Task<List<T>> Generic_StoredProcedureReaderAsync<T>(SqlParameter[] parameters, string name, Func<SqlDataReader, T> converter)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
@@ -202,10 +209,23 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    return await cmd.ExecuteReaderAsync();
+                    SqlDataReader dr = await cmd.ExecuteReaderAsync();
+                    List<T> output = new List<T>();
+                    while (await dr.ReadAsync())
+                    {
+                        output.Add(converter(dr));
+                    }
+
+                    return output;
                 }
             }
         }
+
+        private T? Generic_StoredProcedureSingle<T>(SqlParameter[] parameters, string name, Func<SqlDataReader, T> converter) => 
+            Generic_StoredProcedureReader<T>(parameters, name, converter).FirstOrDefault();
+
+        private async Task<T?> Generic_StoredProcedureSingleAsync<T>(SqlParameter[] parameters, string name, Func<SqlDataReader, T> converter) => 
+            (await Generic_StoredProcedureReaderAsync<T>(parameters, name, converter)).FirstOrDefault();
 
         private int Generic_StoredProcedureNonQuery(SqlParameter[] parameters, string name)
         {

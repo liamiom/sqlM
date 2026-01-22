@@ -178,6 +178,9 @@ internal class FileHandler
                     "public event EventHandler<UpdateError>? ScriptError;",
                     "public event EventHandler<UpdateError> ScriptError;"
                 ).Replace(
+                    "public event EventHandler<UpdateDatabaseInteraction>? DatabaseInteraction;",
+                    "public event EventHandler<UpdateDatabaseInteraction> DatabaseInteraction;"
+                ).Replace(
                     "public static string? GetNullableString",
                     "public static string GetNullableString"
                 ).Replace(
@@ -186,6 +189,9 @@ internal class FileHandler
                 ).Replace(
                     "string?",
                     "string"
+                ).Replace(
+                    "T?",
+                    "T"
                 );
         }
 

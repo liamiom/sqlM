@@ -21,7 +21,7 @@ internal static class Templates
 
 using System;
 using {(DotNet.IsDotnetCoreProject() ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient")};
-using System.Collections.Generic;{(DotNet.IsDotnetCoreProject() ? "" : "\nusing System.Threading.Tasks;")}
+using System.Collections.Generic;{(DotNet.IsDotnetCoreProject() ? "" : "\nusing System.Threading.Tasks;\nusing System.Linq;")}
 
 namespace sqlM
 {{
@@ -48,14 +48,14 @@ namespace sqlM
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
-            {GetAssignment(model)};
+            {GetAssignment(model)}
         }}
 
         public async {AsyncReturnType(model.ReturnType)} {model.MethodName}Async({model.MethodParams})
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}Async"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
-            {GetAssignmentAsync(model)};
+            {GetAssignmentAsync(model)}
         }}
     }}
 ";
@@ -315,26 +315,28 @@ namespace sqlM
             return Generic_OpenReader(parameters, {model.TypeStaticClassName}.{model.MethodName}, convert);";
 
     private static string StoredProcedureNonAssignment(TemplateModel model) =>
-        @$"return Generic_StoredProcedureNonQuery(parameters, ""{model.MethodName}"") != 0";
+        @$"return Generic_StoredProcedureNonQuery(parameters, ""{model.MethodName}"") != 0;";
 
     private static string StoredProcedureScalarAssignment(TemplateModel model) =>
-        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{model.MethodName}"");
-		    dr.Read();
-		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
-		";
+        @$"{model.ReturnType} convert(SqlDataReader dr)
+            {{
+                return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
+            }}
+
+            return Generic_StoredProcedureReader(parameters, ""{model.MethodName}"", convert).FirstOrDefault();";
 
     private static string StoredProcedureAssignment(TemplateModel model) =>
-        @$"SqlDataReader dr = Generic_StoredProcedureReader(parameters, ""{model.MethodName}"");
-		    List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (dr.Read())
-		    {{
-			    output.Add(new {model.EntityName}
+        @$"{model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
 			    {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+			    }};
+            }}
 
-		    return output";
+            List<{model.EntityName}> output = Generic_StoredProcedureReader(parameters, ""{model.MethodName}"", convert);
+
+		    return output;";
 
     private static string GetAssignmentAsync(TemplateModel model) =>
         model.ObjectType switch
@@ -369,26 +371,28 @@ namespace sqlM
             return await Generic_OpenReaderAsync(parameters, {model.TypeStaticClassName}.{model.MethodName}, convert);";
 
     private static string StoredProcedureNonAssignmentAsync(TemplateModel model) =>
-        @$"return await Generic_StoredProcedureNonQueryAsync(parameters, ""{model.MethodName}"") != 0";
+        @$"return await Generic_StoredProcedureNonQueryAsync(parameters, ""{model.MethodName}"") != 0;";
 
     private static string StoredProcedureScalarAssignmentAsync(TemplateModel model) =>
-        @$"SqlDataReader dr = await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"");
-		    dr.Read();
-		    return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
-		";
+        @$"{model.ReturnType} convert(SqlDataReader dr)
+            {{
+                return dr.{GetTypeRequest(model.Columns.First().FullDataType)}(0);
+            }}
+
+            return (await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"", convert)).FirstOrDefault();";
 
     private static string StoredProcedureAssignmentAsync(TemplateModel model) =>
-        @$"SqlDataReader dr = await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"");
-		    List<{model.EntityName}> output = new List<{model.EntityName}>();
-		    while (dr.Read())
-		    {{
-                output.Add(new {model.EntityName}
+        @$"{model.EntityName} convert(SqlDataReader dr)
+            {{
+                return new {model.EntityName}
 			    {{
 {ToPropertySet(model.Columns)}
-			    }});
-		    }}
+			    }};
+            }}
 
-		    return output";
+            List<{model.EntityName}> output = await Generic_StoredProcedureReaderAsync(parameters, ""{model.MethodName}"", convert);
+
+		    return output;";
 
     private static string AsyncReturnType(string returnType) =>
         $"Task<{returnType}>";
