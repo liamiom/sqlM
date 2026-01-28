@@ -84,6 +84,26 @@ internal class StoredProcedureFile
             _ => ScriptClassFile.ObjectReturnTypes.StoredProcedureResult
         };
 
+        string errorMessage = "";
+        bool externalType = state.EntityTypeCache.Any(i => i.Name == sqlFile.EntityName);
+        if (externalType)
+        {
+            ResultTypeAbstract? itemType = state.EntityTypeCache.Where(i => i.Name == sqlFile.EntityName).FirstOrDefault();
+            if (!itemType.ColumnsMatch(columns, out string error))
+            {
+                errorMessage = error;
+            }
+        }
+        else
+        {
+            ResultTypeAbstract tableAbstract = new()
+            {
+                Name = sqlFile.EntityName,
+                Columns = columns,
+            };
+            state.EntityTypeCache.Add(tableAbstract);
+        }
+
         return new ScriptClassFile(
             fileName: $"{sqlFile.CleanFileName}.cs",
             entityName: sqlFile.EntityName,
@@ -93,7 +113,8 @@ internal class StoredProcedureFile
             methodParams: methodParams,
             sqlParams: sqlParams,
             objectType: objectType,
-            ScriptType: sqlFile.ScriptType
+            ScriptType: sqlFile.ScriptType,
+            generateType: !externalType
         );
     }
 

@@ -123,6 +123,15 @@ internal class QueryFile
                 errorMessage = error;
             }
         }
+        else
+        {
+            ResultTypeAbstract tableAbstract = new()
+            {
+                Name = sqlFile.EntityName,
+                Columns = columns,
+            };
+            state.EntityTypeCache.Add(tableAbstract);
+        }
 
         return new ScriptClassFile(
             fileName: $"{sqlFile.CleanFileName}.cs",
