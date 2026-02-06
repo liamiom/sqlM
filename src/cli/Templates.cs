@@ -100,12 +100,12 @@ namespace sqlM
             return await Generic_OpenReaderAsync(parameters, script, convert);
         }}
 
-        public int {model.MethodName}_Set({model.MethodName} item) =>
+        public int {model.MethodName}_Set({model.EntityName} item) =>
             {GetCrudUpdateCheck(model.Columns)}
                 ? {model.MethodName}_Update(item)
                 : {model.MethodName}_Add(item);
 
-        public int {model.MethodName}_Update({model.MethodName} item)
+        public int {model.MethodName}_Update({model.EntityName} item)
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Update"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
@@ -124,7 +124,7 @@ namespace sqlM
                 : (int)result;
         }}
 
-        public int {model.MethodName}_Add({model.MethodName} item)
+        public int {model.MethodName}_Add({model.EntityName} item)
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Add"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
@@ -145,12 +145,12 @@ namespace sqlM
                 : (int)result;
         }}
 
-        public async Task<int> {model.MethodName}_SetAsync({model.MethodName} item) =>
+        public async Task<int> {model.MethodName}_SetAsync({model.EntityName} item) =>
             {GetCrudUpdateCheck(model.Columns)}
                 ? await {model.MethodName}_UpdateAsync(item)
                 : await {model.MethodName}_AddAsync(item);
 
-        public async Task<int> {model.MethodName}_UpdateAsync({model.MethodName} item)
+        public async Task<int> {model.MethodName}_UpdateAsync({model.EntityName} item)
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_UpdateAsync"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
@@ -169,7 +169,7 @@ namespace sqlM
                 : (int)result;
         }}
 
-        public async Task<int> {model.MethodName}_AddAsync({model.MethodName} item)
+        public async Task<int> {model.MethodName}_AddAsync({model.EntityName} item)
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_AddAsync"", ""{model.EntityName}""));
             {Parameters(model.UpdateParams)}
