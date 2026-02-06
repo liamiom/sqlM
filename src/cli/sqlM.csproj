@@ -63,7 +63,7 @@
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <PackageId>sqlM</PackageId>
-    <Version>0.2.33</Version>
+    <Version>0.2.34</Version>
     <Title>sqlM</Title>
     <ToolCommandName>sqlM</ToolCommandName>
     <PackageOutputPath>bin/./nupkg</PackageOutputPath>
