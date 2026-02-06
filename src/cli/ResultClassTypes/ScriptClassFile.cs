@@ -194,7 +194,7 @@ internal class ScriptClassFile : BaseClassFile
         string returnType = GetReturnType(isQuery, isScalar, entityName, scalarTypeName);
 
         return ScriptType == State.SqlFile.ObjectTypes.Table
-            ? GetCRUDMethodSigniture(returnType, methodName, getParams)
+            ? GetCRUDMethodSigniture(returnType, entityName, methodName, getParams)
             : GetSingleMethodSigniture(returnType, methodName, methodParams);
     }
 
@@ -202,15 +202,15 @@ internal class ScriptClassFile : BaseClassFile
         $"        public {returnType} {methodName}({methodParams});\n" +
         $"        public {AsyncReturnType(returnType)} {methodName}Async({methodParams});";
 
-    private static string GetCRUDMethodSigniture(string returnType, string methodName, string getParams) =>
+    private static string GetCRUDMethodSigniture(string returnType, string entityName, string methodName, string getParams) =>
         $"        public {returnType} {methodName}_Get({getParams});\n" +
         $"        public {AsyncReturnType(returnType)} {methodName}_GetAsync({getParams});\n" +
-        $"        public int {methodName}_Set({methodName} item);\n" +
-        $"        public Task<int> {methodName}_SetAsync({methodName} item);\n" +
-        $"        public int {methodName}_Update({methodName} item);\n" +
-        $"        public Task<int> {methodName}_UpdateAsync({methodName} item);\n" +
-        $"        public int {methodName}_Add({methodName} item);\n" +
-        $"        public Task<int> {methodName}_AddAsync({methodName} item);\n" +
+        $"        public int {methodName}_Set({entityName} item);\n" +
+        $"        public Task<int> {methodName}_SetAsync({entityName} item);\n" +
+        $"        public int {methodName}_Update({entityName} item);\n" +
+        $"        public Task<int> {methodName}_UpdateAsync({entityName} item);\n" +
+        $"        public int {methodName}_Add({entityName} item);\n" +
+        $"        public Task<int> {methodName}_AddAsync({entityName} item);\n" +
         $"        public bool {methodName}_Del({getParams});\n" +
         $"        public Task<bool> {methodName}_DelAsync({getParams});";
 
