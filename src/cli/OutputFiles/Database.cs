@@ -339,26 +339,92 @@ namespace sqlM
     {
         public static byte[] GetByteArray(this SqlDataReader dr, int i) =>
             (byte[])dr[i];
+
         public static int? GetNullableInt32(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new int?() : dr.GetInt32(i);
+
         public static DateTime? GetNullableDateTime(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new DateTime?() : dr.GetDateTime(i);
+
         public static DateOnly GetDateOnly(this SqlDataReader dr, int i) =>
             DateOnly.FromDateTime(dr.GetDateTime(i));
+
         public static DateOnly? GetNullableDateOnly(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new DateOnly?() : DateOnly.FromDateTime(dr.GetDateTime(i));
+
         public static decimal? GetNullableDecimal(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new decimal?() : dr.GetDecimal(i);
+
         public static double? GetNullableDouble(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new double?() : dr.GetDouble(i);
+
         public static bool? GetNullableBoolean(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new bool?() : dr.GetBoolean(i);
+
         public static byte[] GetNullableByteArray(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new byte[0] : dr.GetByteArray(i);
+
         public static Guid? GetNullableGuid(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? new Guid?() : dr.GetGuid(i);
-        public static string? GetNullableString(this SqlDataReader dr, int i) =>
+
+        public static string GetNullableString(this SqlDataReader dr, int i) =>
             dr.IsDBNull(i) ? null : dr.GetString(i);
+
+        public static int GetInt32(this SqlDataReader dr, string name) =>
+            (int)dr[name];
+        public static int? GetNullableInt32(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new int?() : (int?)dr[name];
+
+        public static DateOnly GetDateOnly(this SqlDataReader dr, string name) =>
+            DateOnly.FromDateTime(dr.GetDateTime(name));
+
+        public static DateOnly? GetNullableDateOnly(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new DateOnly?() : DateOnly.FromDateTime(dr.GetDateTime(name));
+
+        public static DateTime GetDateTime(this SqlDataReader dr, string name) =>
+            (DateTime)dr[name];
+
+        public static DateTime? GetNullableDateTime(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new DateTime?() : (DateTime?)dr[name];
+
+        public static decimal GetDecimal(this SqlDataReader dr, string name) =>
+            (decimal)dr[name];
+
+        public static decimal? GetNullableDecimal(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new decimal?() : (decimal?)dr[name];
+
+        public static double GetDouble(this SqlDataReader dr, string name) =>
+            (double)dr[name];
+
+        public static double? GetNullableDouble(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new double?() : (double?)dr[name];
+
+        public static bool GetBoolean(this SqlDataReader dr, string name) =>
+            (bool)dr[name];
+
+        public static bool? GetNullableBoolean(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new bool?() : (bool?)dr[name];
+
+        public static byte[] GetByteArray(this SqlDataReader dr, string name) =>
+            (byte[])dr[name];
+
+        public static byte[] GetNullableByteArray(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new byte[0] : (byte[])dr[name];
+
+        public static Guid GetGuid(this SqlDataReader dr, string name) =>
+            (Guid)dr[name];
+
+        public static Guid? GetNullableGuid(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? new Guid?() : (Guid?)dr[name];
+
+        public static string GetString(this SqlDataReader dr, string name) =>
+            (string)dr[name];
+
+        public static string? GetNullableString(this SqlDataReader dr, string name) =>
+            dr.IsDBNull(name) ? null : (string?)dr[name];
+
+        public static bool IsDBNull(this SqlDataReader dr, string name) =>
+            dr[name] == null || dr[name] == DBNull.Value;
     }
 
     public class UpdateScript : EventArgs

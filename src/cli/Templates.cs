@@ -400,7 +400,7 @@ namespace sqlM
     private static string ToPropertySet(List<Column> columns) =>
         columns
             .Select(i =>
-                $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}({i.Index}),"
+                $"\t\t\t\t\t{i.ColumnName} = dr.{GetTypeRequest(i.FullDataType)}(\"{i.ColumnName}\"),"
             )
             .ToMultiLineString();
 
