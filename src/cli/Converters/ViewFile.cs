@@ -47,7 +47,8 @@ internal class ViewFile
             methodParams: "",
             sqlParams: "",
             objectType: ScriptClassFile.ObjectReturnTypes.View,
-            ScriptType: sqlFile.ScriptType
+            ScriptType: sqlFile.ScriptType, 
+            state: state
         );
     }
 }

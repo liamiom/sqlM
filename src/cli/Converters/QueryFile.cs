@@ -142,7 +142,8 @@ internal class QueryFile
             methodParams: methodParams,
             sqlParams: sqlParams,
             objectType: objectType,
-            ScriptType: sqlFile.ScriptType,
+            ScriptType: sqlFile.ScriptType, 
+            state: state,
             generateType: !externalType,
             errorMessage: errorMessage
         );

@@ -101,7 +101,8 @@ internal class TableFile
             methodParams: methodParams,
             sqlParams: sqlParams,
             objectType: ScriptClassFile.ObjectReturnTypes.Table,
-            ScriptType: sqlFile.ScriptType,
+            ScriptType: sqlFile.ScriptType, 
+            state: state,
             updateParams: updateParams,
             crudMethods: sqlFile.OverrideFlags.GenerateCrudMethods
         );

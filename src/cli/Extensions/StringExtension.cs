@@ -23,6 +23,7 @@ internal static class StringExtension
             return value;
         }
 
+        value = value.ToLower();
         return alias.ContainsKey(value) 
             ? alias[value] 
             : value;
@@ -71,4 +72,9 @@ internal static class StringExtension
 
     public static string ToSpectreSafe(this string input) => 
         input.Replace("[", "[[").Replace("]", "]]");
+
+    public static string ReturnIfTrue(this string input, bool testValue) =>
+        testValue
+            ? input
+            : "";
 }

@@ -4,7 +4,7 @@ using Spectre.Console;
 namespace sqlM;
 public class StartupParams
 {
-    public enum Actions { None, Help, Scaffold, Add, Edit, Remove }
+    public enum Actions { None, Help, Scaffold, Add, Edit, Remove, Configure }
     public enum ObjectTypes { None, Query, Table, View, Function, StoredProcedure }
     public Actions Action { get; set; }
     public ObjectTypes ObjectType { get; set; }
@@ -15,6 +15,7 @@ public class StartupParams
     {
         { "h", "Help" },
         { "s", "Scaffold" },
+        { "c", "Configure" },
         { "a", "Add" },
         { "e", "Edit" },
         { "r", "Remove" },
@@ -25,6 +26,7 @@ public class StartupParams
         { "sp", "StoredProcedure" },
         { "-h", "Help" },
         { "-s", "Scaffold" },
+        { "-c", "Configure" },
         { "-a", "Add" },
         { "-e", "Edit" },
         { "-r", "Remove" },
@@ -60,7 +62,7 @@ public class StartupParams
             return false;
         }
 
-        if (Action == Actions.None || Action == Actions.Help || Action == Actions.Scaffold)
+        if (Action == Actions.None || Action == Actions.Help || Action == Actions.Scaffold || Action == Actions.Configure)
         {
             return true;
         }
@@ -118,6 +120,7 @@ public class StartupParams
             Actions.Scaffold => new sqlM.Actions.Scaffold(),
             Actions.Add => new sqlM.Actions.Add(),
             Actions.Edit => new sqlM.Actions.Edit(),
+            Actions.Configure => new sqlM.Actions.Config(),
             Actions.Remove => new sqlM.Actions.Remove(),
             _ => new sqlM.Actions.None(),
         };

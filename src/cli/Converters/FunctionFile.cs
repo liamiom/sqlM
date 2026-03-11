@@ -47,7 +47,8 @@ internal class FunctionFile
             methodParams: "",
             sqlParams: "",
             objectType: ScriptClassFile.ObjectReturnTypes.Function,
-            sqlFile.ScriptType
+            sqlFile.ScriptType,
+            state
         );
     }
 }

@@ -108,7 +108,8 @@ internal class SqlFile
             methodParams: "",
             sqlParams: "",
             objectType: ScriptClassFile.ObjectReturnTypes.Table,
-            ScriptType: sqlFile.ScriptType
+            ScriptType: sqlFile.ScriptType, 
+            state: state
         );
 
     public static string CleanFileName(string fileName) => 

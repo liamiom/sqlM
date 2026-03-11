@@ -43,29 +43,46 @@ namespace sqlM
             ? ""
             : $@"
     public partial class Database
-    {{
+    {{{MethodClassSyncMethod(model)}
+{MethodClassAsyncMethod(model)}
+    }}
+";
+
+    private static string MethodClassSyncMethod(TemplateModel model) =>
+        !model.GenerateSyncMethods
+            ? ""
+            : $@"
         public {model.ReturnType} {model.MethodName}({model.MethodParams})
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
             {GetAssignment(model)}
-        }}
+        }}";
 
+    private static string MethodClassAsyncMethod(TemplateModel model) =>
+        !model.GenerateAsyncMethods
+            ? ""
+            : $@"
         public async {AsyncReturnType(model.ReturnType)} {model.MethodName}Async({model.MethodParams})
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}Async"", ""{model.EntityName}""));
             {Parameters(model.SqlParams)}
             {GetAssignmentAsync(model)}
-        }}
-    }}
-";
+        }}";
 
     private static string CrudClass(TemplateModel model) =>
         !model.IsTableType || !model.CrudMethods || string.IsNullOrWhiteSpace(model.EntityName)
         ? ""
         : $@"
     public partial class Database
-    {{
+    {{{CrudClassSyncGetMethod(model)}{CrudClassAsyncGetMethod(model)}{CrudClassSyncSetMethod(model)}{CrudClassAsyncSetMethod(model)}{CrudClassSyncDelMethod(model)}{CrudClassAsyncDelMethod(model)}
+    }}
+";
+
+    private static string CrudClassSyncGetMethod(TemplateModel model) =>
+        !model.GenerateSyncMethods
+            ? ""
+            : $@"
         public List<{model.EntityName}> {model.MethodName}_Get({model.GetParams})
         {{
             DatabaseInteraction?.Invoke(this, new UpdateDatabaseInteraction(""{model.MethodName}_Get"", ""{model.EntityName}""));
@@ -81,7 +98,12 @@ namespace sqlM
             }}
 
             return Generic_OpenReader(parameters, script, convert);
-        }}
+        }}";
+
+    private static string CrudClassAsyncGetMethod(TemplateModel model) =>
+        !model.GenerateAsyncMethods
+            ? ""
+            : $@"
 
         public async Task<List<{model.EntityName}>> {model.MethodName}_GetAsync({model.GetParams})
         {{
@@ -98,7 +120,12 @@ namespace sqlM
             }}
 
             return await Generic_OpenReaderAsync(parameters, script, convert);
-        }}
+        }}";
+
+    private static string CrudClassSyncSetMethod(TemplateModel model) =>
+        !model.GenerateSyncMethods
+            ? ""
+            : $@"
 
         public int {model.MethodName}_Set({model.EntityName} item) =>
             {GetCrudUpdateCheck(model.Columns)}
@@ -143,7 +170,12 @@ namespace sqlM
             return result is DBNull
                 ? 0 
                 : (int)result;
-        }}
+        }}";
+
+    private static string CrudClassAsyncSetMethod(TemplateModel model) =>
+        !model.GenerateAsyncMethods
+            ? ""
+            : $@"
 
         public async Task<int> {model.MethodName}_SetAsync({model.EntityName} item) =>
             {GetCrudUpdateCheck(model.Columns)}
@@ -188,7 +220,12 @@ namespace sqlM
             return result is DBNull
                 ? 0 
                 : (int)result;
-        }}
+        }}";
+
+    private static string CrudClassSyncDelMethod(TemplateModel model) =>
+        !model.GenerateSyncMethods
+            ? ""
+            : $@"
 
         public bool {model.MethodName}_Del({model.GetParams})
         {{
@@ -197,7 +234,12 @@ namespace sqlM
             {Parameters(model.SqlParams)}
             Generic_ExecuteNonQuery(parameters, script);
             return true;
-        }}
+        }}";
+
+    private static string CrudClassAsyncDelMethod(TemplateModel model) =>
+        !model.GenerateAsyncMethods
+            ? ""
+            : $@"
 
         public async Task<bool> {model.MethodName}_DelAsync({model.GetParams})
         {{
@@ -206,9 +248,7 @@ namespace sqlM
             {Parameters(model.SqlParams)}
             await Generic_ExecuteNonQueryAsync(parameters, script);
             return true;
-        }}
-    }}
-";
+        }}";
 
     private static string GetCrudUpdateCheck(List<Column> columns) =>
         !columns.Any(i => i.IsKey)

@@ -114,7 +114,8 @@ internal class StoredProcedureFile
             sqlParams: sqlParams,
             objectType: objectType,
             ScriptType: sqlFile.ScriptType,
-            generateType: !externalType
+            generateType: !externalType, 
+            state: state
         );
     }
 

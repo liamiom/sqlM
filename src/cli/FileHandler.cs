@@ -149,22 +149,28 @@ internal class FileHandler
             $"UpdateScript[] updateScripts = new UpdateScript[] {{ \n{updateScripts} \t\t}};"
             );
 
-        string interfaceFields = classFiles
-            .Select(i => i.MethodSigniture ?? "")
-            .Prepend("        public bool Update();")
-            .Prepend("        public string GetConnectionString();")
-            .Where(i => !string.IsNullOrWhiteSpace(i))
-            .Join("\n");
-
-        if (!DotNet.IsDotnetCoreProject())
+        if (state.GenerateInterfaceClass)
         {
-            interfaceFields = interfaceFields.Replace("public ", "");
-        }
+            string interfaceFields = classFiles
+                .Select(i => i.MethodSigniture ?? "")
+                .Prepend("        public bool Update();\n")
+                .Prepend("        public string GetConnectionString();\n")
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Join("");
 
-        dbFile.Content = dbFile.Content.Replace(
-                    "// Interface fields go here",
-                    interfaceFields
-                );
+            if (!DotNet.IsDotnetCoreProject())
+            {
+                interfaceFields = interfaceFields.Replace("public ", "");
+            }
+
+            dbFile.Content = dbFile.Content.RegexReplace("// Interface fields go here\\s", interfaceFields);
+        }
+        else
+        {
+            dbFile.Content = dbFile.Content
+                .Replace("public partial class Database : IDatabase", "public partial class Database")
+                .RegexReplace("\\s+public interface IDatabase\\s*\\{\\s+// Interface fields go here\\s+\\}", "");
+        }
 
         if (!DotNet.IsDotnetCoreProject())
         {

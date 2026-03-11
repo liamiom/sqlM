@@ -23,5 +23,7 @@ internal class TemplateModel
     public required string QueryParams;
     public required string UpdateParams;
     public required bool CrudMethods;
+    public required bool GenerateSyncMethods;
+    public required bool GenerateAsyncMethods;
     public required List<Column> Columns;
 }

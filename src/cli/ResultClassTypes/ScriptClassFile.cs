@@ -1,4 +1,6 @@
-﻿namespace sqlM.ResultClassTypes;
+﻿using sqlM.Extensions;
+
+namespace sqlM.ResultClassTypes;
 
 internal class ScriptClassFile : BaseClassFile
 {
@@ -14,6 +16,7 @@ internal class ScriptClassFile : BaseClassFile
         string sqlParams,
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
+        State.Container state,
         string updateParams = "",
         bool generateType = true,
         bool crudMethods = false,
@@ -32,7 +35,8 @@ internal class ScriptClassFile : BaseClassFile
             methodParams,
             sqlParams,
             objectType,
-            ScriptType,
+            ScriptType, 
+            state,
             updateParams,
             generateType,
             crudMethods
@@ -41,6 +45,7 @@ internal class ScriptClassFile : BaseClassFile
             ScriptType,
             entityName,
             methodName,
+            state,
             columns,
             methodParams,
             crudMethods
@@ -56,6 +61,7 @@ internal class ScriptClassFile : BaseClassFile
         string sqlParams,
         ObjectReturnTypes objectType,
         State.SqlFile.ObjectTypes ScriptType,
+        State.Container state,
         string updateParams,
         bool generateType,
         bool crudMethods)
@@ -136,6 +142,8 @@ internal class ScriptClassFile : BaseClassFile
             QueryParams = sqlParams,
             UpdateParams = updateParams,
             CrudMethods = crudMethods,
+            GenerateSyncMethods = state.GenerateSyncMethods,
+            GenerateAsyncMethods = state.GenerateAsyncMethods,
             Columns = columns,
         };
 
@@ -171,6 +179,7 @@ internal class ScriptClassFile : BaseClassFile
         State.SqlFile.ObjectTypes ScriptType,
         string entityName,
         string methodName,
+        State.Container state,
         List<Column> columns,
         string methodParams,
         bool crudMethods)
@@ -194,25 +203,25 @@ internal class ScriptClassFile : BaseClassFile
         string returnType = GetReturnType(isQuery, isScalar, entityName, scalarTypeName);
 
         return ScriptType == State.SqlFile.ObjectTypes.Table
-            ? GetCRUDMethodSigniture(returnType, entityName, methodName, getParams)
-            : GetSingleMethodSigniture(returnType, methodName, methodParams);
+            ? GetCRUDMethodSigniture(returnType, entityName, methodName, getParams, state)
+            : GetSingleMethodSigniture(returnType, methodName, methodParams, state);
     }
 
-    private static string GetSingleMethodSigniture(string returnType, string methodName, string methodParams) =>
-        $"        public {returnType} {methodName}({methodParams});\n" +
-        $"        public {AsyncReturnType(returnType)} {methodName}Async({methodParams});";
+    private static string GetSingleMethodSigniture(string returnType, string methodName, string methodParams, State.Container state) =>
+        $"        public {returnType} {methodName}({methodParams});\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public {AsyncReturnType(returnType)} {methodName}Async({methodParams});\n".ReturnIfTrue(state.GenerateAsyncMethods);
 
-    private static string GetCRUDMethodSigniture(string returnType, string entityName, string methodName, string getParams) =>
-        $"        public {returnType} {methodName}_Get({getParams});\n" +
-        $"        public {AsyncReturnType(returnType)} {methodName}_GetAsync({getParams});\n" +
-        $"        public int {methodName}_Set({entityName} item);\n" +
-        $"        public Task<int> {methodName}_SetAsync({entityName} item);\n" +
-        $"        public int {methodName}_Update({entityName} item);\n" +
-        $"        public Task<int> {methodName}_UpdateAsync({entityName} item);\n" +
-        $"        public int {methodName}_Add({entityName} item);\n" +
-        $"        public Task<int> {methodName}_AddAsync({entityName} item);\n" +
-        $"        public bool {methodName}_Del({getParams});\n" +
-        $"        public Task<bool> {methodName}_DelAsync({getParams});";
+    private static string GetCRUDMethodSigniture(string returnType, string entityName, string methodName, string getParams, State.Container state) =>
+        $"        public {returnType} {methodName}_Get({getParams});\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public {AsyncReturnType(returnType)} {methodName}_GetAsync({getParams});\n".ReturnIfTrue(state.GenerateAsyncMethods) +
+        $"        public int {methodName}_Set({entityName} item);\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public Task<int> {methodName}_SetAsync({entityName} item);\n".ReturnIfTrue(state.GenerateAsyncMethods) +
+        $"        public int {methodName}_Update({entityName} item);\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public Task<int> {methodName}_UpdateAsync({entityName} item);\n".ReturnIfTrue(state.GenerateAsyncMethods) +
+        $"        public int {methodName}_Add({entityName} item);\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public Task<int> {methodName}_AddAsync({entityName} item);\n".ReturnIfTrue(state.GenerateAsyncMethods) +
+        $"        public bool {methodName}_Del({getParams});\n".ReturnIfTrue(state.GenerateSyncMethods) +
+        $"        public Task<bool> {methodName}_DelAsync({getParams});\n".ReturnIfTrue(state.GenerateAsyncMethods);
 
     private static string AsyncReturnType(string returnType) =>
         $"Task<{returnType}>";

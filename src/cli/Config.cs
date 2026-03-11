@@ -5,6 +5,7 @@ internal class Config
 {
     private static string _folderPath =  $"{Environment.CurrentDirectory}/.sqlM";
     private static string _filePath = $"{_folderPath}/config";
+    private static readonly string[] _truthy = ["1", "yes", "true"];
 
     public static bool Exists() => 
         File.Exists(_filePath);
@@ -45,7 +46,10 @@ internal class Config
         {
             ConnectionString = MakeConnectionString(serverName, userName, password, databaseName),
             SourceDirectory = AnsiConsole.Ask("Source .sql files directory:", defaultValue: "Source"),
-            OutputDirectory = AnsiConsole.Ask("Generated .cs files directory:", defaultValue: "sqlM")
+            OutputDirectory = AnsiConsole.Ask("Generated .cs files directory:", defaultValue: "sqlM"),
+            GenerateInterfaceClass = AnsiConsole.Confirm("Generate an interface class. This makes dependency injection easier but makes merge conflicts more likely."),
+            GenerateSyncMethods = AnsiConsole.Confirm("Generate sync methods. These are simpler to implement but lock the execution thread."),
+            GenerateAsyncMethods = AnsiConsole.Confirm("Generate async methods. These are a little more complex to use but allow you to use the async await pattern.")
         };
 
         Save(config);
@@ -81,7 +85,10 @@ internal class Config
             _filePath, 
             $"ConnectionString: {config.ConnectionString}\n" +
             $"SqlFolder: {config.SourceDirectory}\n" +
-            $"OutputDirectory: {config.OutputDirectory}\n");
+            $"OutputDirectory: {config.OutputDirectory}\n" +
+            $"GenerateInterfaceClass: {config.GenerateInterfaceClass}\n" +
+            $"GenerateSyncMethods: {config.GenerateSyncMethods}\n" +
+            $"GenerateAsyncMethods: {config.GenerateAsyncMethods}\n");
     }
 
     public static bool TryLoad(out State.Container config)
@@ -127,6 +134,9 @@ internal class Config
             ConnectionString = GetLine(lines, "ConnectionString"),
             SourceDirectory = Path.Combine(Directory.GetCurrentDirectory(), GetLine(lines, "SqlFolder")),
             OutputDirectory = Path.Combine(Directory.GetCurrentDirectory(), GetLine(lines, "OutputDirectory")),
+            GenerateInterfaceClass = GetLineAsBool(lines, "GenerateInterfaceClass", defaultValue: true),
+            GenerateSyncMethods = GetLineAsBool(lines, "GenerateSyncMethods", defaultValue: true),
+            GenerateAsyncMethods = GetLineAsBool(lines, "GenerateAsyncMethods", defaultValue: true),
         };
     }
 
@@ -137,4 +147,11 @@ internal class Config
             .Replace($"{propName}:", "")
             .Trim();
 
+    private static bool GetLineAsBool(string[] lines, string propName, bool defaultValue)
+    { 
+        string line = GetLine(lines, propName).ToLower();
+        return string.IsNullOrWhiteSpace(line) 
+            ? defaultValue 
+            : _truthy.Contains(line);
+    }
 }
