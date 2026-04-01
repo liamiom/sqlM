@@ -143,13 +143,13 @@ internal class TableFile
         try
         {
             string sqlString = $"SELECT * FROM {script.TableName}";
-            SqlConnection conn = new(conString);
+            using SqlConnection conn = new(conString);
 
             conn.Open();
-            SqlTransaction transaction = conn.BeginTransaction();
-            SqlCommand cmd = new(sqlString, conn, transaction);
+            using SqlTransaction transaction = conn.BeginTransaction();
+            using SqlCommand cmd = new(sqlString, conn, transaction);
 
-            SqlDataReader rdr = cmd.ExecuteReader();
+            using SqlDataReader rdr = cmd.ExecuteReader();
             DataTable? tableSchema = rdr.GetSchemaTable();
 
             rdr.Close();

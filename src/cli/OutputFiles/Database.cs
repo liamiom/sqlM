@@ -61,14 +61,16 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    SqlDataReader dr = cmd.ExecuteReader();
-                    List<T> output = new List<T>();
-                    while (dr.Read())
-                    {
-                        output.Add(converter(dr));
-                    }
+                    using (SqlDataReader dr = cmd.ExecuteReader()) 
+                    { 
+                        List<T> output = new List<T>();
+                        while (dr.Read())
+                        {
+                            output.Add(converter(dr));
+                        }
 
-                    return output;
+                        return output;
+                    }
                 }
             }
         }
@@ -89,14 +91,16 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    SqlDataReader dr = await cmd.ExecuteReaderAsync();
-                    List<T> output = new List<T>();
-                    while (await dr.ReadAsync())
+                    using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
                     {
-                        output.Add(converter(dr));
-                    }
+                        List<T> output = new List<T>();
+                        while (await dr.ReadAsync())
+                        {
+                            output.Add(converter(dr));
+                        }
 
-                    return output;
+                        return output;
+                    }
                 }
             }
         }
@@ -181,14 +185,16 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    SqlDataReader dr = cmd.ExecuteReader();
-                    List<T> output = new List<T>();
-                    while (dr.Read())
-                    {
-                        output.Add(converter(dr));
-                    }
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    { 
+                        List<T> output = new List<T>();
+                        while (dr.Read())
+                        {
+                            output.Add(converter(dr));
+                        }
 
-                    return output;
+                        return output;
+                    }
                 }
             }
         }
@@ -209,14 +215,16 @@ namespace sqlM
                         cmd.Parameters.AddRange(parameters);
                     }
 
-                    SqlDataReader dr = await cmd.ExecuteReaderAsync();
-                    List<T> output = new List<T>();
-                    while (await dr.ReadAsync())
+                    using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
                     {
-                        output.Add(converter(dr));
-                    }
+                        List<T> output = new List<T>();
+                        while (await dr.ReadAsync())
+                        {
+                            output.Add(converter(dr));
+                        }
 
-                    return output;
+                        return output;
+                    }
                 }
             }
         }

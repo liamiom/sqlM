@@ -136,22 +136,22 @@ internal class StoredProcedureFile
         string testQuery = "";
         try
         {
-            SqlConnection conn = new(conString);
+            using SqlConnection conn = new(conString);
 
             conn.Open();
-            SqlTransaction transaction = conn.BeginTransaction();
+            using SqlTransaction transaction = conn.BeginTransaction();
 
             // Add the stored procedure and its dependencies to the database
             string[] sqlSections = SplitOnGo(script.ContentNoTableConstraints);
             foreach (string sql in sqlSections)
             {
-                SqlCommand createCmd = new(sql, conn, transaction);
+                using SqlCommand createCmd = new(sql, conn, transaction);
                 createCmd.ExecuteNonQuery();
             }
 
 
             // Execute the stored procedure to get the table schema
-            SqlCommand runCmd = new(script.ObjectName, conn, transaction)
+            using SqlCommand runCmd = new(script.ObjectName, conn, transaction)
             {
                 CommandType = CommandType.StoredProcedure
             };
@@ -167,7 +167,7 @@ internal class StoredProcedureFile
                         .Aggregate((x, y) => x + ",\n" + y)
                 : $"EXEC {script.EntityName}\n";
 
-            SqlDataReader rdr = runCmd.ExecuteReader();
+            using SqlDataReader rdr = runCmd.ExecuteReader();
             DataTable? tableSchema = rdr.GetSchemaTable();
 
             rdr.Close();

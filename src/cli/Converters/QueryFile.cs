@@ -168,18 +168,18 @@ internal class QueryFile
     {
         try
         {
-            SqlConnection conn = new(conString);
+            using SqlConnection conn = new(conString);
 
             conn.Open();
-            SqlTransaction transaction = conn.BeginTransaction();
-            SqlCommand cmd = new(script.ContentNoTableConstraints, conn, transaction);
+            using SqlTransaction transaction = conn.BeginTransaction();
+            using SqlCommand cmd = new(script.ContentNoTableConstraints, conn, transaction);
 
             foreach (KeyValuePair<string, Type> param in script.Paramiters)
             {
                 cmd.Parameters.AddWithValue(param.Key, GetDefaultValue(param.Value));
             }
 
-            SqlDataReader rdr = cmd.ExecuteReader();
+            using SqlDataReader rdr = cmd.ExecuteReader();
             DataTable? tableSchema = rdr.GetSchemaTable();
 
             rdr.Close();

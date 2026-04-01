@@ -23,11 +23,11 @@ public partial class Database
     {
         string script = "SELECT name FROM master.dbo.sysdatabases";
         List<string> output = new();
-        SqlConnection dbConnection = new(connectionString);
+        using SqlConnection dbConnection = new(connectionString);
         dbConnection.Open();
 
-        SqlCommand command = new(script, dbConnection);
-        SqlDataReader reader = command.ExecuteReader();
+        using SqlCommand command = new(script, dbConnection);
+        using SqlDataReader reader = command.ExecuteReader();
 
         while (reader.Read())
         {
