@@ -359,9 +359,8 @@ namespace sqlM
             return true;
         }
 
-        private static string[] SplitOnGo(string sql) => 
-            Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
-                .Replace("GO", "¬")
+        private static string[] SplitOnGo(string sql) =>
+            Regex.Replace(sql, @"^(\s*GO\s*)+$", "¬", RegexOptions.Multiline | RegexOptions.IgnoreCase)
                 .Split('¬')
                 .Where(i => !string.IsNullOrWhiteSpace(i))
                 .ToArray();
