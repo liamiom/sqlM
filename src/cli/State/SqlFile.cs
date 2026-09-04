@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using sqlM.Converters;
+using System.Text.RegularExpressions;
 
 namespace sqlM.State;
 
@@ -10,6 +11,10 @@ public class SqlFile : File
     public ObjectTypes ScriptType { get; set; }
     public string TableName { get; set; }
     public List<SqlFile> Dependencies { get; set; } = new List<SqlFile>();
+    public string ContentWithDependenciesTag =>
+        Dependencies.Count > 0
+            ? $"-- Dependencies = {Dependencies.Select(i => i.CleanFileName).Join(",")}\n{Content}"
+            : "";
     public int SortOrder { get; set; } = 0;
     public ResultClassTypes.Flags OverrideFlags { get; set; } = new ResultClassTypes.Flags();
 

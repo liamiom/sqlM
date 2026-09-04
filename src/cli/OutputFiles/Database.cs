@@ -283,9 +283,35 @@ namespace sqlM
                 .Select(field => new UpdateScript(field.Name, field.GetValue(null).ToString()))
                 .ToArray();
 
+        private UpdateScript[] SortByDependency(UpdateScript[] scripts)
+        {
+            List<(UpdateScript script, List<string> dependencies)> combined = scripts.Select(i => (i, GetDependencies(i.Content))).ToList();
+            List<UpdateScript> output = new List<UpdateScript>();
+
+            while (combined.Count > 0)
+            {
+                List<UpdateScript> itemsWithNoDependencies = combined.Where(i => i.dependencies.Count == 0).Select(i => i.script).ToList();
+                output.AddRange(itemsWithNoDependencies);
+                combined.RemoveAll(i => i.dependencies.Count == 0);
+
+                foreach (var item in itemsWithNoDependencies)
+                {
+                    combined.ForEach(i => i.dependencies.RemoveAll(d => d == item.Name));
+                }
+            }
+
+            return output.ToArray();
+        }
+
+        private List<string> GetDependencies(string scriptContent) =>
+            scriptContent.StartsWith("\n-- Dependencies = ")
+                ? scriptContent.Substring(0, scriptContent.IndexOf('\n', 1)).Replace("\n-- Dependencies = ", "").Split(',').ToList()
+                : new List<string>();
+
         public bool Update()
         {
             UpdateScript[] updateScripts = GetUpdateScripts();
+            updateScripts = SortByDependency(updateScripts);
 
             SqlConnection conn = new SqlConnection(_connectionString);
             conn.Open();

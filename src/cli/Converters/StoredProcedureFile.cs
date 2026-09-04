@@ -109,7 +109,7 @@ internal class StoredProcedureFile
             entityName: sqlFile.EntityName,
             methodName: methodName,
             columns: columns,
-            sqlContent: sqlFile.Content,
+            sqlContent: sqlFile.ContentWithDependenciesTag,
             methodParams: methodParams,
             sqlParams: sqlParams,
             objectType: objectType,
