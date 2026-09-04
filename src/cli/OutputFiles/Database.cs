@@ -277,9 +277,15 @@ namespace sqlM
             }
         }
 
+        private UpdateScript[] GetUpdateScripts() =>
+            typeof(DatabaseUpdateStrings)
+                .GetFields()
+                .Select(field => new UpdateScript(field.Name, field.GetValue(null).ToString()))
+                .ToArray();
+
         public bool Update()
         {
-            UpdateScript[] updateScripts = Array.Empty<UpdateScript>(); // Database update scripts go here
+            UpdateScript[] updateScripts = GetUpdateScripts();
 
             SqlConnection conn = new SqlConnection(_connectionString);
             conn.Open();
@@ -465,3 +471,6 @@ namespace sqlM
         }
     }
 }
+
+public static partial class DatabaseUpdateStrings
+{ }
