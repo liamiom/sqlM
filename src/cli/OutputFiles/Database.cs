@@ -333,7 +333,10 @@ namespace sqlM
                     }
                 }
 
-                AddCacheItem(conn, transaction, script.Name, script.Hash);
+                if (differentialUpdate)
+                {
+                    AddCacheItem(conn, transaction, script.Name, script.Hash);
+                }
             }
 
             transaction.Commit();
