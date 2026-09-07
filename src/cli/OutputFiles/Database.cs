@@ -14,6 +14,9 @@
 using System;
 using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
+using System.Data;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace sqlM
 {
@@ -277,13 +280,22 @@ namespace sqlM
             }
         }
 
-        public bool Update()
+        public bool Update(bool differentialUpdate = true)
         {
-            UpdateScript[] updateScripts = Array.Empty<UpdateScript>(); // Database update scripts go here
+            List<UpdateScript> updateScripts = GetUpdateScripts();
+            updateScripts = SortByDependency(updateScripts);
+            AddHashes(updateScripts);
 
             SqlConnection conn = new SqlConnection(_connectionString);
             conn.Open();
             SqlTransaction transaction = conn.BeginTransaction();
+
+            if (differentialUpdate)
+            {
+                CreateCacheTable(conn, transaction);
+                Dictionary<string, string> scriptCache = GetCacheTable(conn, transaction);
+                updateScripts.RemoveAll(i => scriptCache.ContainsKey(i.Name) && scriptCache[i.Name] == i.Hash);
+            }
 
             foreach (UpdateScript script in updateScripts)
             {
@@ -320,6 +332,11 @@ namespace sqlM
                         return false;
                     }
                 }
+
+                if (differentialUpdate)
+                {
+                    AddCacheItem(conn, transaction, script.Name, script.Hash);
+                }
             }
 
             transaction.Commit();
@@ -327,9 +344,115 @@ namespace sqlM
             return true;
         }
 
-        private static string[] SplitOnGo(string sql) => 
-            Regex.Replace(sql, @"^(\s*GO\s*)+$", "GO", RegexOptions.Multiline | RegexOptions.IgnoreCase)
-                .Replace("GO", "¬")
+        private void CreateCacheTable(SqlConnection conn, SqlTransaction transaction)
+        {
+            string sql =
+                @"
+                --Create sqlM_Cache Table
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE id = OBJECT_ID(N'[dbo].[sqlM_Cache]'))
+                CREATE TABLE [dbo].[sqlM_Cache](
+            	    [ScriptName] [varchar](800) NOT NULL,
+            	    [Hash] [varchar](800) NOT NULL,
+                )
+                ";
+
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.Connection = conn;
+            cmd.Transaction = transaction;
+
+            cmd.ExecuteNonQuery();
+        }
+
+        private Dictionary<string, string> GetCacheTable(SqlConnection conn, SqlTransaction transaction)
+        {
+            string sql = @"SELECT ScriptName, Hash FROM sqlM_Cache";
+
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.Connection = conn;
+            cmd.Transaction = transaction;
+
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                Dictionary<string, string> output = new Dictionary<string, string>();
+                while (dr.Read())
+                {
+                    output.Add(dr.GetString("ScriptName"), dr.GetString("Hash"));
+                }
+
+                return output;
+            }
+        }
+
+        private void AddCacheItem(SqlConnection conn, SqlTransaction transaction, string scriptName, string hash)
+        {
+            string sql =
+                @"
+                IF EXISTS(SELECT * FROM sqlM_Cache WHERE ScriptName = @ScriptName)
+                BEGIN
+                    UPDATE sqlM_Cache SET [Hash] = @Hash WHERE ScriptName = @ScriptName
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO sqlM_Cache ([ScriptName], [Hash]) VALUES (@ScriptName, @Hash)
+                END
+                ";
+
+            SqlCommand cmd = conn.CreateCommand();
+            cmd.Parameters.Add("@ScriptName", SqlDbType.VarChar).Value = scriptName;
+            cmd.Parameters.Add("@Hash", SqlDbType.VarChar).Value = hash;
+            cmd.CommandText = sql;
+            cmd.Connection = conn;
+            cmd.Transaction = transaction;
+
+            cmd.ExecuteNonQuery();
+        }
+
+        private List<UpdateScript> GetUpdateScripts() =>
+            typeof(DatabaseUpdateStrings)
+                .GetFields()
+                .Select(field => new UpdateScript(field.Name, field.GetValue(null).ToString()))
+                .ToList();
+
+        private static void AddHashes(List<UpdateScript> scripts)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                foreach (var script in scripts)
+                {
+                    script.Hash = Convert.ToBase64String(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(script.Content)));
+                }
+            }
+        }
+
+        private List<UpdateScript> SortByDependency(List<UpdateScript> scripts)
+        {
+            List<(UpdateScript script, List<string> dependencies)> combined = scripts.Select(i => (i, GetDependencies(i.Content))).ToList();
+            List<UpdateScript> output = new List<UpdateScript>();
+
+            while (combined.Count > 0)
+            {
+                List<UpdateScript> itemsWithNoDependencies = combined.Where(i => i.dependencies.Count == 0).Select(i => i.script).ToList();
+                output.AddRange(itemsWithNoDependencies);
+                combined.RemoveAll(i => i.dependencies.Count == 0);
+
+                foreach (var item in itemsWithNoDependencies)
+                {
+                    combined.ForEach(i => i.dependencies.RemoveAll(d => d == item.Name));
+                }
+            }
+
+            return output.ToList();
+        }
+
+        private List<string> GetDependencies(string scriptContent) =>
+            scriptContent.StartsWith("\n-- Dependencies = ")
+                ? scriptContent.Substring(0, scriptContent.IndexOf('\n', 1)).Replace("\n-- Dependencies = ", "").Split(',').ToList()
+                : new List<string>();
+
+        private static string[] SplitOnGo(string sql) =>
+            Regex.Replace(sql, @"^(\s*GO\s*)+$", "¬", RegexOptions.Multiline | RegexOptions.IgnoreCase)
                 .Split('¬')
                 .Where(i => !string.IsNullOrWhiteSpace(i))
                 .ToArray();
@@ -439,6 +562,7 @@ namespace sqlM
     {
         public string Name { get; set; }
         public string Content { get; set; }
+        public string Hash { get; set; }
         public UpdateScript(string name, string content)
         {
             Name = name;
@@ -465,3 +589,6 @@ namespace sqlM
         }
     }
 }
+
+public static partial class DatabaseUpdateStrings
+{ }

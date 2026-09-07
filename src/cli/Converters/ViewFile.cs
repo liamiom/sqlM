@@ -43,7 +43,7 @@ internal class ViewFile
             entityName: sqlFile.EntityName,
             methodName: sqlFile.CleanFileName,
             columns: new List<Column>(),
-            sqlContent: sqlFile.Content,
+            sqlContent: sqlFile.ContentWithDependenciesTag,
             methodParams: "",
             sqlParams: "",
             objectType: ScriptClassFile.ObjectReturnTypes.View,

@@ -136,19 +136,6 @@ internal class FileHandler
     {
         BaseClassFile dbFile = GetEmbeddedFile("Database.cs", "Database.cs");
 
-        var sqlFiles = OrderByDependencies(state.SqlFiles);
-
-        string updateScripts = sqlFiles
-            .Where(i => i.ScriptType != SqlFile.ObjectTypes.Query &&  i.ScriptType != SqlFile.ObjectTypes.None)
-            .OrderBy(i => i.SortOrder)
-            .Select(i => $"\t\t\tnew UpdateScript(\"{i.CleanFileName}\", DatabaseUpdateStrings.{i.CleanFileName}),\n")
-            .Join();
-
-        dbFile.Content = dbFile.Content.Replace(
-            $"UpdateScript[] updateScripts = Array.Empty<UpdateScript>(); // Database update scripts go here", 
-            $"UpdateScript[] updateScripts = new UpdateScript[] {{ \n{updateScripts} \t\t}};"
-            );
-
         if (state.GenerateInterfaceClass)
         {
             string interfaceFields = classFiles
