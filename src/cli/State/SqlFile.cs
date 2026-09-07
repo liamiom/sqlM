@@ -14,7 +14,7 @@ public class SqlFile : File
     public string ContentWithDependenciesTag =>
         Dependencies.Count > 0
             ? $"-- Dependencies = {Dependencies.Select(i => i.CleanFileName).Join(",")}\n{Content}"
-            : "";
+            : Content;
     public int SortOrder { get; set; } = 0;
     public ResultClassTypes.Flags OverrideFlags { get; set; } = new ResultClassTypes.Flags();
 
